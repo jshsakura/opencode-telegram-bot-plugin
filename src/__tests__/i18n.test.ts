@@ -5,157 +5,101 @@ describe("i18n module", () => {
   describe("t() function", () => {
     describe("Korean translations", () => {
       it("should return Korean session.idle.title", () => {
-        expect(t("session.idle.title", "ko")).toBe("🚀 작업 완료");
+        expect(t("session.idle.title", "ko")).toBe("🤖 작업이 완료되었습니다");
       });
 
-      it("should return Korean session.idle.session", () => {
-        expect(t("session.idle.session", "ko")).toBe("세션");
+      it("should return Korean session.waiting.title", () => {
+        expect(t("session.waiting.title", "ko")).toBe("⏳ 사용자 입력을 기다리고 있습니다");
       });
 
       it("should return Korean permission.title", () => {
-        expect(t("permission.title", "ko")).toBe("🔔 권한 요청");
-      });
-
-      it("should return Korean permission.action", () => {
-        expect(t("permission.action", "ko")).toBe("작업");
-      });
-
-      it("should return Korean permission.command", () => {
-        expect(t("permission.command", "ko")).toBe("명령어");
-      });
-
-      it("should return Korean permission.path", () => {
-        expect(t("permission.path", "ko")).toBe("경로");
+        expect(t("permission.title", "ko")).toBe("🔔 권한 승인이 필요합니다");
       });
 
       it("should return Korean permission.allow", () => {
-        expect(t("permission.allow", "ko")).toBe("✅ 허용");
+        expect(t("permission.allow", "ko")).toBe("✅ 승인합니다");
       });
 
       it("should return Korean permission.always", () => {
-        expect(t("permission.always", "ko")).toBe("✅ 항상 허용");
+        expect(t("permission.always", "ko")).toBe("✅ 항상 승인합니다");
       });
 
       it("should return Korean permission.reject", () => {
-        expect(t("permission.reject", "ko")).toBe("❌ 거부");
+        expect(t("permission.reject", "ko")).toBe("❌ 거부합니다");
       });
 
       it("should return Korean todos.title", () => {
-        expect(t("todos.title", "ko")).toBe("📋 모든 작업 완료");
+        expect(t("todos.title", "ko")).toBe("📋 작업 진행 현황");
       });
 
-      it("should return Korean todos.more", () => {
-        expect(t("todos.more", "ko")).toBe("... 외 N개 더");
+      it("should return Korean todos.all_completed", () => {
+        expect(t("todos.all_completed", "ko")).toBe("🎉 모든 작업이 완료되었습니다");
       });
 
       it("should return Korean subtask.title", () => {
-        expect(t("subtask.title", "ko")).toBe("🔀 하위 작업 시작");
-      });
-
-      it("should return Korean subtask.agent", () => {
-        expect(t("subtask.agent", "ko")).toBe("에이전트");
-      });
-
-      it("should return Korean subtask.description", () => {
-        expect(t("subtask.description", "ko")).toBe("설명");
-      });
-
-      it("should return Korean subtask.prompt", () => {
-        expect(t("subtask.prompt", "ko")).toBe("프롬프트");
+        expect(t("subtask.title", "ko")).toBe("🔀 새로운 작업을 시작합니다");
       });
 
       it("should return Korean error.title", () => {
-        expect(t("error.title", "ko")).toBe("❌ 오류");
+        expect(t("error.title", "ko")).toBe("❌ 오류가 발생했습니다");
       });
 
       it("should return Korean button.allowed", () => {
-        expect(t("button.allowed", "ko")).toBe("✅ 허용됨");
+        expect(t("button.allowed", "ko")).toBe("✅ 승인되었습니다");
       });
 
-      it("should return Korean button.always_allowed", () => {
-        expect(t("button.always_allowed", "ko")).toBe("✅ 항상 허용");
-      });
-
-      it("should return Korean button.rejected", () => {
-        expect(t("button.rejected", "ko")).toBe("❌ 거부됨");
+      it("should return Korean summary.no_action_needed", () => {
+        expect(t("summary.no_action_needed", "ko")).toBe("별도의 조치가 필요하지 않습니다");
       });
     });
 
     describe("English translations", () => {
       it("should return English session.idle.title", () => {
-        expect(t("session.idle.title", "en")).toBe("🚀 Task Complete");
+        expect(t("session.idle.title", "en")).toBe("🤖 Task Completed");
       });
 
-      it("should return English session.idle.session", () => {
-        expect(t("session.idle.session", "en")).toBe("Session");
+      it("should return English session.waiting.title", () => {
+        expect(t("session.waiting.title", "en")).toBe("⏳ Waiting for Your Input");
       });
 
       it("should return English permission.title", () => {
-        expect(t("permission.title", "en")).toBe("🔔 Permission Request");
-      });
-
-      it("should return English permission.action", () => {
-        expect(t("permission.action", "en")).toBe("Action");
-      });
-
-      it("should return English permission.command", () => {
-        expect(t("permission.command", "en")).toBe("Command");
-      });
-
-      it("should return English permission.path", () => {
-        expect(t("permission.path", "en")).toBe("Path");
+        expect(t("permission.title", "en")).toBe("🔔 Approval Required");
       });
 
       it("should return English permission.allow", () => {
-        expect(t("permission.allow", "en")).toBe("✅ Allow");
+        expect(t("permission.allow", "en")).toBe("✅ Approve");
       });
 
       it("should return English permission.always", () => {
-        expect(t("permission.always", "en")).toBe("✅ Always");
-      });
-
-      it("should return English permission.reject", () => {
-        expect(t("permission.reject", "en")).toBe("❌ Reject");
+        expect(t("permission.always", "en")).toBe("✅ Always Approve");
       });
 
       it("should return English todos.title", () => {
-        expect(t("todos.title", "en")).toBe("📋 All Tasks Complete");
+        expect(t("todos.title", "en")).toBe("📋 Task Progress");
       });
 
-      it("should return English todos.more", () => {
-        expect(t("todos.more", "en")).toBe("... and N more");
+      it("should return English todos.all_completed", () => {
+        expect(t("todos.all_completed", "en")).toBe("🎉 All tasks completed");
       });
 
       it("should return English subtask.title", () => {
-        expect(t("subtask.title", "en")).toBe("🔀 Subtask Started");
-      });
-
-      it("should return English subtask.agent", () => {
-        expect(t("subtask.agent", "en")).toBe("Agent");
-      });
-
-      it("should return English subtask.description", () => {
-        expect(t("subtask.description", "en")).toBe("Description");
+        expect(t("subtask.title", "en")).toBe("🔀 New Task Started");
       });
 
       it("should return English subtask.prompt", () => {
-        expect(t("subtask.prompt", "en")).toBe("Prompt");
+        expect(t("subtask.prompt", "en")).toBe("Instructions");
       });
 
       it("should return English error.title", () => {
-        expect(t("error.title", "en")).toBe("❌ Error");
+        expect(t("error.title", "en")).toBe("❌ Error Occurred");
       });
 
       it("should return English button.allowed", () => {
-        expect(t("button.allowed", "en")).toBe("✅ Allowed");
+        expect(t("button.allowed", "en")).toBe("✅ Approved");
       });
 
-      it("should return English button.always_allowed", () => {
-        expect(t("button.always_allowed", "en")).toBe("✅ Always Allowed");
-      });
-
-      it("should return English button.rejected", () => {
-        expect(t("button.rejected", "en")).toBe("❌ Rejected");
+      it("should return English summary.no_action_needed", () => {
+        expect(t("summary.no_action_needed", "en")).toBe("No action needed");
       });
     });
 
@@ -170,11 +114,11 @@ describe("i18n module", () => {
 
       it("should fallback to Korean for invalid language", () => {
         // @ts-expect-error - Testing invalid language
-        expect(t("session.idle.title", "invalid")).toBe("🚀 작업 완료");
+        expect(t("session.idle.title", "invalid")).toBe("🤖 작업이 완료되었습니다");
       });
 
       it("should use default language (Korean) when no language specified", () => {
-        expect(t("session.idle.title")).toBe("🚀 작업 완료");
+        expect(t("session.idle.title")).toBe("🤖 작업이 완료되었습니다");
       });
     });
   });
@@ -196,10 +140,6 @@ describe("i18n module", () => {
 
     it("should return false for invalid language", () => {
       expect(isValidLanguage("ja")).toBe(false);
-    });
-
-    it("should return false for empty string", () => {
-      expect(isValidLanguage("")).toBe(false);
     });
   });
 

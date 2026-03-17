@@ -228,3 +228,28 @@ All modules integrate correctly:
 - No `TelegramConfigSchema` exported - schema validation not part of public API
 - Source maps generated correctly (.js.map, .d.ts.map)
 - ES modules compiled correctly for Node.js consumption
+
+## 2026-03-18: README Documentation Update
+
+### Documentation Structure
+- Keep sections in logical order: Features → Installation → Setup → Configuration → Language → Filtering → Dedup → Notifications → License
+- Use markdown tables for config variables and notification events
+- Provide practical code examples for each feature
+
+### Config Table Format
+| Variable | Description | Default |
+|----------|-------------|---------|
+Use monospace for variable names and values in table cells.
+
+### Environment Variables Documented
+All 10 TELEGRAM_* variables documented:
+- Required: `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`
+- Optional with defaults: `TELEGRAM_LANGUAGE`, `TELEGRAM_NOTIFY_*`, `TELEGRAM_DEDUP_*`
+
+### Section Order Strategy
+Place Configuration section after Setup (step 5), before language/filtering sections. This follows the user journey: install → setup → configure → customize.
+
+### Notification Table Updates
+Added two new events:
+- Session idle (💤 Session Idle)
+- Session done (📊 Session Summary with files, changes)

@@ -690,7 +690,7 @@ Wave FINAL (After ALL tasks — 4 parallel reviews):
 
   **Commit**: NO (이전 커밋들에 포함)
 
-- [ ] 10. README 업데이트
+- [x] 10. README 업데이트
 
   **What to do**:
   - 새로운 환경변수 문서화

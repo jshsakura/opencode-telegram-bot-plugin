@@ -209,7 +209,7 @@ Wave FINAL (After ALL tasks — 4 parallel reviews):
   - Message: `chore: add vitest configuration and test infrastructure`
   - Files: `vitest.config.ts`, `package.json`, `src/__tests__/setup.test.ts`
 
-- [ ] 2. i18n 모듈 구현 (한국어/영어)
+- [x] 2. i18n 모듈 구현 (한국어/영어)
 
   **What to do**:
   - `src/i18n/index.ts` 생성 (i18n 코어 로직)
@@ -276,7 +276,7 @@ Wave FINAL (After ALL tasks — 4 parallel reviews):
   - Message: `feat(i18n): add internationalization module with ko/en support`
   - Files: `src/i18n/index.ts`, `src/i18n/ko.ts`, `src/i18n/en.ts`, `src/__tests__/i18n.test.ts`
 
-- [ ] 3. dedup 모듈 구현
+- [x] 3. dedup 모듈 구현
 
   **What to do**:
   - `src/dedup.ts` 생성
@@ -345,7 +345,7 @@ Wave FINAL (After ALL tasks — 4 parallel reviews):
   - Message: `feat(dedup): add notification deduplication with file-based storage`
   - Files: `src/dedup.ts`, `src/__tests__/dedup.test.ts`
 
-- [ ] 4. config 모듈 구현
+- [x] 4. config 모듈 구현
 
   **What to do**:
   - `src/config.ts` 생성

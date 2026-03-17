@@ -1,0 +1,44 @@
+{
+  "name": "@jshsakura/opencode-telegram-bot-plugin",
+  "version": "1.0.0",
+  "description": "OpenCode plugin for Telegram notifications - get notified when tasks complete, respond to permission requests via Telegram",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist",
+    "prepublishOnly": "npm run clean && npm run build"
+  },
+  "keywords": [
+    "opencode",
+    "plugin",
+    "telegram",
+    "notification"
+  ],
+  "author": "jshsakura",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jshsakura/opencode-telegram-bot-plugin"
+  },
+  "homepage": "https://github.com/jshsakura/opencode-telegram-bot-plugin#readme",
+  "dependencies": {
+    "@opencode-ai/plugin": "^1.1.65",
+    "@opencode-ai/sdk": "^1.1.65"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.9",
+    "typescript": "^5.8.2"
+  }
+}

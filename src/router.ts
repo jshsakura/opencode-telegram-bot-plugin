@@ -1,5 +1,6 @@
-import type { OpenCodeEvent, SessionState } from './types.js';
+import type { OpenCodeEvent, SessionState, SessionSummary, FileDiff } from './types.js';
 import { TelegramBridge } from './telegram.js';
+import { getConfig } from './config.js';
 
 const SESSION_MAX_IDLE_MS = 2 * 60 * 60 * 1000; // 2 hours
 const SESSION_EVICT_INTERVAL_MS = 10 * 60 * 1000; // 10 minutes
@@ -8,6 +9,8 @@ export class EventRouter {
   private telegram: TelegramBridge;
   private sessionStates = new Map<string, SessionState>();
   private sessionTitles = new Map<string, string>();
+  private sessionSummaries = new Map<string, SessionSummary>();
+  private sessionDiffs = new Map<string, FileDiff[]>();
   private evictTimer: NodeJS.Timeout;
 
   constructor(telegram: TelegramBridge) {
@@ -22,6 +25,8 @@ export class EventRouter {
       if (state.lastSeenAt < cutoff) {
         this.sessionStates.delete(id);
         this.sessionTitles.delete(id);
+        this.sessionSummaries.delete(id);
+        this.sessionDiffs.delete(id);
       }
     }
   }
@@ -44,10 +49,27 @@ export class EventRouter {
         await this.handleMessagePartUpdated(event);
         break;
       case 'session.updated': {
-        const props = event.properties as { info: { id: string; title?: string } };
+        const props = event.properties as { 
+          info: { 
+            id: string; 
+            title?: string;
+            summary?: SessionSummary;
+          } 
+        };
         if (props.info.title) {
           this.sessionTitles.set(props.info.id, props.info.title);
         }
+        if (props.info.summary) {
+          this.sessionSummaries.set(props.info.id, props.info.summary);
+        }
+        break;
+      }
+      case 'session.diff': {
+        const props = event.properties as { 
+          sessionID: string; 
+          diff: FileDiff[] 
+        };
+        this.sessionDiffs.set(props.sessionID, props.diff);
         break;
       }
       case 'session.created': {
@@ -94,13 +116,18 @@ export class EventRouter {
   }
 
   private async handleSessionIdle(event: OpenCodeEvent): Promise<void> {
+    if (!getConfig().notifications.session) return;
+
     const { sessionID } = event.properties as { sessionID: string };
     const state = this.sessionStates.get(sessionID);
 
     if (!state || state.status !== 'idle') return;
 
     const title = this.sessionTitles.get(sessionID) || sessionID;
-    await this.telegram.sendSessionIdle(title, sessionID);
+    const summary = this.sessionSummaries.get(sessionID);
+    const diffs = this.sessionDiffs.get(sessionID);
+    
+    await this.telegram.sendSessionIdle(title, sessionID, summary, diffs);
   }
 
   private async handlePermissionUpdated(event: OpenCodeEvent): Promise<void> {
@@ -114,6 +141,8 @@ export class EventRouter {
   }
 
   private async handleTodoUpdated(event: OpenCodeEvent): Promise<void> {
+    if (!getConfig().notifications.todo) return;
+
     const { todos } = event.properties as {
       sessionID: string;
       todos: Array<{
@@ -147,6 +176,7 @@ export class EventRouter {
     };
 
     if (part.type === 'subtask') {
+      if (!getConfig().notifications.subtask) return;
       await this.telegram.sendSubtaskStarted(
         part.description || '',
         part.agent || 'unknown',
@@ -156,6 +186,8 @@ export class EventRouter {
   }
 
   private async handleSessionError(event: OpenCodeEvent): Promise<void> {
+    if (!getConfig().notifications.error) return;
+
     const { sessionID, error } = event.properties as {
       sessionID: string;
       error?: {

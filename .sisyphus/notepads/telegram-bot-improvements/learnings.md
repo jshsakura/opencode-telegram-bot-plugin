@@ -89,3 +89,108 @@ notifications.error: true
 dedup.enabled: true
 dedup.ttlMs: 300000  // 5 minutes
 ```
+
+## 2026-03-18: Notification Filtering Pattern
+- Early return pattern at the start of handlers: `if (!getConfig().notifications.X) return;`
+- For subtask filtering, check config inside the type check to avoid unnecessary config access
+- Permission requests are ALWAYS sent (no filtering) as they require user interaction
+- Config import: `import { getConfig } from "./config.js";`
+
+## Dedup Integration in sendMessage (2026-03-18)
+
+**Pattern**: Use optional `skipDedup` parameter for exempting specific message types from dedup
+- Added `skipDedup?: boolean` as third parameter to private `sendMessage`
+- Permission requests pass `true` to bypass dedup (every permission request must be delivered)
+- Other notifications use dedup to prevent duplicate messages within TTL
+
+**Implementation details**:
+```typescript
+private async sendMessage(text: string, inlineKeyboard?: InlineKeyboardButton[][], skipDedup?: boolean): Promise<void> {
+  if (!skipDedup) {
+    const config = getConfig();
+    if (config.dedup.enabled) {
+      const shouldSend = await checkAndStore(text, config.dedup.ttlMs);
+      if (!shouldSend) return; // Skip duplicate
+    }
+  }
+  // ... send message
+}
+```
+
+**Graceful degradation**: If dedup check fails (throws), message is still sent. This ensures notifications work even if dedup storage is corrupted.
+
+**Config usage**: `getConfig()` is called inside `sendMessage` to get fresh config values (enabled, ttlMs).
+
+## Session Summary Feature (2026-03-18)
+
+### Pattern: In-Memory Session Data Storage
+- Use Map<string, Type> for session-related data storage in EventRouter
+- `sessionSummaries = new Map<string, SessionSummary>()` for summary stats
+- `sessionDiffs = new Map<string, FileDiff[]>()` for file change lists
+- Clean up all session-related Maps in `evictStaleSessions()`
+
+### Types Added to types.ts
+```typescript
+interface FileDiff {
+  file: string;
+  before: string;
+  after: string;
+  additions: number;
+  deletions: number;
+}
+
+interface SessionSummary {
+  additions: number;
+  deletions: number;
+  files: number;
+  diffs?: FileDiff[];
+}
+```
+
+### Event Handlers
+- `session.updated`: Store title AND summary if present
+- `session.diff`: Store diffs array indexed by sessionID
+- Both use simple `Map.set()` operations
+
+### Telegram Method Signature Update
+- Extended `sendSessionIdle` to accept optional `summary` and `diffs` parameters
+- Display stats line: `📊 Changes +N / -M`
+- Display file list: `📁 Files:` followed by indented file paths
+
+### i18n Keys Added
+- `session.idle.stats`: "📊 변경" / "📊 Changes"
+- `session.idle.files`: "📁 파일" / "📁 Files"
+
+### No Interpolation in i18n
+- Current t() function doesn't support template interpolation
+- For dynamic values (additions/deletions), format directly in code: `+${summary.additions} / -${summary.deletions}`
+- Keep i18n keys for static text labels only
+
+## 2026-03-18: i18n Applied to telegram.ts
+
+### Message Function i18n Pattern
+- Get language at start of each function: `const lang = getConfig().language;`
+- Use `t('key.path', lang)` for all display strings
+- For strings with dynamic values, use `.replace()` on translation result:
+  ```typescript
+  t('todos.more', lang).replace('N', String(todos.length - 10))
+  ```
+
+### Translation Keys Used
+| Function | Keys |
+|----------|------|
+| sendSessionIdle | `session.idle.title`, `session.idle.session`, `session.idle.stats`, `session.idle.files` |
+| sendPermissionRequest | `permission.title`, `permission.action`, `permission.command`, `permission.path`, `permission.allow`, `permission.always`, `permission.reject` |
+| sendTodosComplete | `todos.title`, `todos.more` |
+| sendSubtaskStarted | `subtask.title`, `subtask.agent`, `subtask.description`, `subtask.prompt` |
+| sendError | `error.title`, `session.idle.session` |
+| handleCallbackQuery | `button.allowed`, `button.always_allowed`, `button.rejected` |
+
+### Emoji Changes
+- Session complete: ✅ → 🚀 (already in translation file)
+- Other emojis kept as-is (already included in translation strings)
+
+### Important: No Function Signature Changes
+- All function signatures remain unchanged
+- Language retrieved from config inside each function
+- Existing logic intact, only display strings changed

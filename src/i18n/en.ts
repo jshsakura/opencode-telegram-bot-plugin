@@ -6,6 +6,8 @@ export const en = {
     idle: {
       title: "🚀 Task Complete",
       session: "Session",
+      stats: "📊 Changes",
+      files: "📁 Files",
     },
   },
   permission: {

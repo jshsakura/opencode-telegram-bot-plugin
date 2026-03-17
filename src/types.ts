@@ -42,6 +42,22 @@ export interface SessionState {
   lastSeenAt: number;
 }
 
+// Session summary data
+export interface FileDiff {
+  file: string;
+  before: string;
+  after: string;
+  additions: number;
+  deletions: number;
+}
+
+export interface SessionSummary {
+  additions: number;
+  deletions: number;
+  files: number;
+  diffs?: FileDiff[];
+}
+
 // OpenCode Event Types
 export interface OpenCodeEvent {
   type: string;

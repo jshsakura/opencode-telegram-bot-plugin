@@ -408,7 +408,7 @@ Wave FINAL (After ALL tasks — 4 parallel reviews):
   - Message: `feat(config): add plugin configuration loader`
   - Files: `src/config.ts`, `src/__tests__/config.test.ts`, `src/types.ts` (확장)
 
-- [ ] 5. telegram.ts에 i18n 적용 + 이모지 개선
+- [x] 5. telegram.ts에 i18n 적용 + 이모지 개선
 
   **What to do**:
   - 기존 하드코딩 메시지를 i18n 호출로 변경
@@ -464,7 +464,7 @@ Wave FINAL (After ALL tasks — 4 parallel reviews):
 
   **Commit**: NO (Task 6과 함께 커밋)
 
-- [ ] 6. telegram.ts에 dedup 적용
+- [x] 6. telegram.ts에 dedup 적용
 
   **What to do**:
   - sendMessage 함수에 dedup 체크 추가
@@ -518,7 +518,7 @@ Wave FINAL (After ALL tasks — 4 parallel reviews):
   - Message: `feat(notifications): integrate i18n, filtering, dedup, and rich emojis`
   - Files: `src/telegram.ts`
 
-- [ ] 7. router.ts에 세션 요약 추가
+- [x] 7. router.ts에 세션 요약 추가
 
   **What to do**:
   - `session.updated` 이벤트 핸들러 수정
@@ -577,7 +577,7 @@ Wave FINAL (After ALL tasks — 4 parallel reviews):
   - Message: `feat(summary): enhance session idle message with file list and stats`
   - Files: `src/router.ts`, `src/telegram.ts`
 
-- [ ] 8. router.ts에 알림 필터링 추가
+- [x] 8. router.ts에 알림 필터링 추가
 
   **What to do**:
   - config에서 알림 타입별 활성화 여부 확인

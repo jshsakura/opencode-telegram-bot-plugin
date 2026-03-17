@@ -6,6 +6,8 @@ export const ko = {
     idle: {
       title: "🚀 작업 완료",
       session: "세션",
+      stats: "📊 변경",
+      files: "📁 파일",
     },
   },
   permission: {

@@ -13,6 +13,8 @@ export interface TranslationMessages {
     idle: {
       title: string;
       session: string;
+      stats: string;
+      files: string;
     };
   };
   permission: {

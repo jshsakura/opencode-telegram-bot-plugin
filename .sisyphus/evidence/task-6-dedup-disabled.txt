@@ -1,0 +1,4 @@
+[opencode-telegram] Failed to send message: Telegram API error: Not Found
+First call completed
+[opencode-telegram] Failed to send message: Telegram API error: Not Found
+Second call completed

@@ -1,0 +1,3 @@
+session.updated handled
+session.diff handled
+Test passed - summary and diffs stored

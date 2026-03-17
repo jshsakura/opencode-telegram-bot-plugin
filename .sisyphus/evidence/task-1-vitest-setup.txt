@@ -1,0 +1,13 @@
+
+> @jshsakura/opencode-telegram-bot-plugin@1.0.0 test
+> vitest run
+
+
+[1m[46m RUN [49m[22m [36mv4.1.0 [39m[90m/home/ubuntu/app/jupyterLab/notebooks/opencode-telegram-bot-plugin[39m
+
+
+[2m Test Files [22m [1m[32m4 passed[39m[22m[90m (4)[39m
+[2m      Tests [22m [1m[32m91 passed[39m[22m[90m (91)[39m
+[2m   Start at [22m 01:54:19
+[2m   Duration [22m 998ms[2m (transform 418ms, setup 0ms, import 732ms, tests 382ms, environment 6ms)[22m
+

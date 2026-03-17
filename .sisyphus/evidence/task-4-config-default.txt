@@ -1,0 +1,14 @@
+{
+  "language": "ko",
+  "notifications": {
+    "session": true,
+    "permission": true,
+    "todo": true,
+    "subtask": true,
+    "error": true
+  },
+  "dedup": {
+    "enabled": true,
+    "ttlMs": 300000
+  }
+}

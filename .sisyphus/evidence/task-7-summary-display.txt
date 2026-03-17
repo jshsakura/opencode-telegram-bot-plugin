@@ -1,0 +1,2 @@
+[opencode-telegram] Failed to send message: Telegram API error: Not Found
+Session idle message sent (check logs above for message content)

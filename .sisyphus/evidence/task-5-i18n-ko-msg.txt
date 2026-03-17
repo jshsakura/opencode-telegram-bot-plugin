@@ -1,0 +1,15 @@
+[opencode-telegram] Failed to send message: Telegram API error: Not Found
+Korean message test passed
+=== Korean Messages ===
+session.idle.title: 🚀 작업 완료
+permission.title: 🔔 권한 요청
+todos.title: 📋 모든 작업 완료
+subtask.title: 🔀 하위 작업 시작
+error.title: ❌ 오류
+
+=== English Messages ===
+session.idle.title: 🚀 Task Complete
+permission.title: 🔔 Permission Request
+todos.title: 📋 All Tasks Complete
+subtask.title: 🔀 Subtask Started
+error.title: ❌ Error

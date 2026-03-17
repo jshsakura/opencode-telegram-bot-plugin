@@ -634,7 +634,7 @@ Wave FINAL (After ALL tasks — 4 parallel reviews):
 
   **Commit**: NO (Task 7과 함께 커밋)
 
-- [ ] 9. 통합 테스트
+- [x] 9. 통합 테스트
 
   **What to do**:
   - 모든 모듈 통합 동작 확인

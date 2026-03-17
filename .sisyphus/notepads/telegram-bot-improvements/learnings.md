@@ -194,3 +194,37 @@ interface SessionSummary {
 - All function signatures remain unchanged
 - Language retrieved from config inside each function
 - Existing logic intact, only display strings changed
+
+## Integration Test Results (2026-03-18)
+
+### Build Output
+- `npm run typecheck` → 0 errors
+- `npm run build` → success
+- `npm test` → 91 tests passed (4 test files)
+
+### dist/ Structure
+All expected files generated:
+- `index.js`, `index.d.ts` - Main plugin export
+- `router.js`, `router.d.ts` - Event routing
+- `telegram.js`, `telegram.d.ts` - Telegram API bridge
+- `types.js`, `types.d.ts` - TypeScript types
+- `config.js`, `config.d.ts` - Configuration module
+- `dedup.js`, `dedup.d.ts` - Deduplication module
+- `i18n/index.js`, `i18n/ko.js`, `i18n/en.js` - Internationalization
+
+### Module Exports
+- **index.js**: Default export `OpencodeTelegram` function
+- **config.js**: `getConfig()`, `clearConfigCache()`
+- **dedup.js**: `checkAndStore()`, `clear()`, `DEFAULT_TTL_MS`
+- **i18n/index.js**: `t()`, `getAvailableLanguages()`, `isValidLanguage()`, `DEFAULT_LANGUAGE`, `translations`, `ko`, `en`
+
+### Cross-Module Integration
+All modules integrate correctly:
+- i18n + config: Language from config used for translations
+- dedup + config: TTL from config used for deduplication
+- All modules importable from dist/ at runtime
+
+### Notes
+- No `TelegramConfigSchema` exported - schema validation not part of public API
+- Source maps generated correctly (.js.map, .d.ts.map)
+- ES modules compiled correctly for Node.js consumption

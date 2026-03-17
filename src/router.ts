@@ -125,7 +125,10 @@ export class EventRouter {
 
     const title = this.sessionTitles.get(sessionID) || sessionID;
     const summary = this.sessionSummaries.get(sessionID);
-    const diffs = this.sessionDiffs.get(sessionID);
+    
+    const diffs = getConfig().notifications.fileList 
+      ? this.sessionDiffs.get(sessionID) 
+      : undefined;
     
     await this.telegram.sendSessionIdle(title, sessionID, summary, diffs);
   }

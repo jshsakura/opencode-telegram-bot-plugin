@@ -10,6 +10,7 @@ export interface TelegramPluginConfig {
     todo: boolean;
     subtask: boolean;
     error: boolean;
+    fileList: boolean;
   };
   dedup: {
     enabled: boolean;
@@ -25,6 +26,7 @@ const DEFAULT_CONFIG: TelegramPluginConfig = {
     todo: true,
     subtask: true,
     error: true,
+    fileList: true,
   },
   dedup: {
     enabled: true,
@@ -68,6 +70,7 @@ export function getConfig(): TelegramPluginConfig {
       todo: parseBoolean(process.env['TELEGRAM_NOTIFY_TODO'], DEFAULT_CONFIG.notifications.todo),
       subtask: parseBoolean(process.env['TELEGRAM_NOTIFY_SUBTASK'], DEFAULT_CONFIG.notifications.subtask),
       error: parseBoolean(process.env['TELEGRAM_NOTIFY_ERROR'], DEFAULT_CONFIG.notifications.error),
+      fileList: parseBoolean(process.env['TELEGRAM_NOTIFY_FILE_LIST'], DEFAULT_CONFIG.notifications.fileList),
     },
     dedup: {
       enabled: parseBoolean(process.env['TELEGRAM_DEDUP_ENABLED'], DEFAULT_CONFIG.dedup.enabled),

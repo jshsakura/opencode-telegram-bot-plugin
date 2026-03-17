@@ -71,6 +71,7 @@ opencode
 | `TELEGRAM_NOTIFY_TODO` | Todo completion notifications | `true` |
 | `TELEGRAM_NOTIFY_SUBTASK` | Subtask start notifications | `true` |
 | `TELEGRAM_NOTIFY_ERROR` | Error notifications | `true` |
+| `TELEGRAM_NOTIFY_FILE_LIST` | File list in session summary | `true` |
 | `TELEGRAM_DEDUP_ENABLED` | Enable duplicate notification filtering | `true` |
 | `TELEGRAM_DEDUP_TTL_MS` | Deduplication TTL in milliseconds | `300000` (5 min) |
 
@@ -94,6 +95,9 @@ Control which notifications you want to receive:
 # Disable session idle notifications
 export TELEGRAM_NOTIFY_SESSION="false"
 
+# Disable file list in session summary
+export TELEGRAM_NOTIFY_FILE_LIST="false"
+
 # Disable todo completion summaries
 export TELEGRAM_NOTIFY_TODO="false"
 
@@ -105,6 +109,38 @@ export TELEGRAM_NOTIFY_ERROR="false"
 ```
 
 Permission notifications cannot be disabled as they require your response.
+
+## Local Testing
+
+Test the plugin locally before publishing:
+
+```bash
+# Build
+npm run build
+
+# Run tests
+npm test
+
+# Test with npm link (in plugin directory)
+npm link
+
+# Use in another project
+cd /path/to/your-project
+npm link @jshsakura/opencode-telegram-bot-plugin
+
+# After testing, unlink
+npm unlink -g @jshsakura/opencode-telegram-bot-plugin
+```
+
+Or use directly with file path:
+
+```json
+{
+  "plugin": [
+    "./path/to/opencode-telegram-bot-plugin"
+  ]
+}
+```
 
 ## Deduplication
 

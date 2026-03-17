@@ -17,6 +17,9 @@
   "scripts": {
     "build": "tsc",
     "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
     "clean": "rm -rf dist",
     "prepublishOnly": "npm run clean && npm run build"
   },
@@ -39,6 +42,8 @@
   },
   "devDependencies": {
     "@types/node": "^22.13.9",
-    "typescript": "^5.8.2"
+    "@vitest/coverage-v8": "^4.1.0",
+    "typescript": "^5.8.2",
+    "vitest": "^4.1.0"
   }
 }

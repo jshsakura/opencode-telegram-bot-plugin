@@ -222,21 +222,22 @@ export class TelegramBridge {
   ): Promise<void> {
     const lang = getConfig().language;
     const lines = [
-      `<b>${t('session.idle.title', lang)}</b>`,
-      ``,
-      `<b>${t('session.idle.session', lang)}:</b> ${escapeHtml(sessionTitle || sessionID)}`,
+      `💤 <b>${t('session.idle.title', lang)}</b>`,
+      `────────────────────`,
+      `<i>${t('session.idle.session', lang)}:</i> <code>${escapeHtml(sessionTitle || sessionID)}</code>`,
     ];
 
-    if (summary) {
-      lines.push('');
-      lines.push(`<b>${t('session.idle.stats', lang)}</b> +${summary.additions} / -${summary.deletions}`);
+    if (summary && (summary.additions > 0 || summary.deletions > 0)) {
+      lines.push(``);
+      lines.push(`📊 <b>${t('session.idle.stats', lang)}</b>`);
+      lines.push(`  <b>+${summary.additions}</b> <i>/</i> <b>-${summary.deletions}</b>`);
     }
 
     if (diffs && diffs.length > 0) {
-      lines.push('');
-      lines.push(`<b>${t('session.idle.files', lang)}:</b>`);
+      lines.push(``);
+      lines.push(`📁 <b>${t('session.idle.files', lang)}</b>`);
       for (const diff of diffs) {
-        lines.push(`  <code>${escapeHtml(diff.file)}</code>`);
+        lines.push(`  • <code>${escapeHtml(diff.file)}</code>`);
       }
     }
 
@@ -250,14 +251,23 @@ export class TelegramBridge {
     metadata: Record<string, unknown>
   ): Promise<void> {
     const lang = getConfig().language;
-    const lines = [`<b>${t('permission.title', lang)}</b>`, ``];
-    lines.push(`<b>${t('permission.action', lang)}:</b> ${escapeHtml(title)}`);
+    const lines = [
+      `🔐 <b>${t('permission.title', lang)}</b>`,
+      `────────────────────`,
+    ];
+    
+    lines.push(`<i>${t('permission.action', lang)}:</i>`);
+    lines.push(`  ${escapeHtml(title)}`);
 
     if (metadata['command']) {
-      lines.push(`<b>${t('permission.command', lang)}:</b> <code>${escapeHtml(String(metadata['command']))}</code>`);
+      lines.push(``);
+      lines.push(`<i>${t('permission.command', lang)}:</i>`);
+      lines.push(`  <code>${escapeHtml(String(metadata['command']))}</code>`);
     }
     if (metadata['path']) {
-      lines.push(`<b>${t('permission.path', lang)}:</b> <code>${escapeHtml(String(metadata['path']))}</code>`);
+      lines.push(``);
+      lines.push(`<i>${t('permission.path', lang)}:</i>`);
+      lines.push(`  <code>${escapeHtml(String(metadata['path']))}</code>`);
     }
 
     const key = this.nextCallbackKey++;
@@ -277,13 +287,17 @@ export class TelegramBridge {
 
   async sendTodosComplete(_sessionID: string, todos: Array<{ content: string }>): Promise<void> {
     const lang = getConfig().language;
-    const lines = [`<b>${t('todos.title', lang)}</b>`, ``];
+    const lines = [
+      `✅ <b>${t('todos.title', lang)}</b>`,
+      `────────────────────`,
+    ];
     
     for (const todo of todos.slice(0, 10)) {
-      lines.push(`  ✅ ${escapeHtml(todo.content)}`);
+      lines.push(`  ✓ ${escapeHtml(todo.content)}`);
     }
     if (todos.length > 10) {
-      lines.push(`  ${t('todos.more', lang).replace('N', String(todos.length - 10))}`);
+      lines.push(``);
+      lines.push(`  <i>${t('todos.more', lang).replace('N', String(todos.length - 10))}</i>`);
     }
 
     await this.sendMessage(lines.join('\n'));
@@ -292,15 +306,19 @@ export class TelegramBridge {
   async sendSubtaskStarted(description: string, agent: string, prompt?: string): Promise<void> {
     const lang = getConfig().language;
     const lines = [
-      `<b>${t('subtask.title', lang)}</b>`,
+      `🔀 <b>${t('subtask.title', lang)}</b>`,
+      `────────────────────`,
+      `<i>${t('subtask.agent', lang)}:</i> <b>${escapeHtml(agent)}</b>`,
       ``,
-      `<b>${t('subtask.agent', lang)}:</b> ${escapeHtml(agent)}`,
-      `<b>${t('subtask.description', lang)}:</b> ${escapeHtml(description)}`,
+      `<i>${t('subtask.description', lang)}:</i>`,
+      `  ${escapeHtml(description)}`,
     ];
 
     if (prompt) {
       const truncated = prompt.length > 200 ? prompt.slice(0, 200) + '...' : prompt;
-      lines.push(`<b>${t('subtask.prompt', lang)}:</b> ${escapeHtml(truncated)}`);
+      lines.push(``);
+      lines.push(`<i>${t('subtask.prompt', lang)}:</i>`);
+      lines.push(`  <code>${escapeHtml(truncated)}</code>`);
     }
 
     await this.sendMessage(lines.join('\n'));
@@ -308,12 +326,16 @@ export class TelegramBridge {
 
   async sendError(message: string, sessionID?: string): Promise<void> {
     const lang = getConfig().language;
-    const lines = [`<b>${t('error.title', lang)}</b>`, ``];
+    const lines = [
+      `❌ <b>${t('error.title', lang)}</b>`,
+      `────────────────────`,
+    ];
     
     if (sessionID) {
-      lines.push(`<b>${t('session.idle.session', lang)}:</b> ${escapeHtml(sessionID)}`);
+      lines.push(`<i>${t('session.idle.session', lang)}:</i> <code>${escapeHtml(sessionID)}</code>`);
+      lines.push(``);
     }
-    lines.push(escapeHtml(message));
+    lines.push(`<code>${escapeHtml(message)}</code>`);
 
     await this.sendMessage(lines.join('\n'));
   }

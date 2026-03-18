@@ -37,7 +37,6 @@
   },
   "homepage": "https://github.com/jshsakura/opencode-telegram-bot-plugin#readme",
   "dependencies": {
-    "@jshsakura/opencode-telegram-bot-plugin": "^1.0.3",
     "@opencode-ai/plugin": "^1.1.65",
     "@opencode-ai/sdk": "^1.1.65"
   },

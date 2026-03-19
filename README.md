@@ -20,6 +20,24 @@
 npm install @jshsakura/opencode-telegram-bot-plugin
 ```
 
+## Update
+
+```bash
+npm update @jshsakura/opencode-telegram-bot-plugin
+```
+
+Or reinstall for a specific version:
+
+```bash
+npm install @jshsakura/opencode-telegram-bot-plugin@latest
+```
+
+After updating, restart OpenCode:
+
+```bash
+opencode
+```
+
 ## Setup
 
 ### 1. Create a Telegram Bot

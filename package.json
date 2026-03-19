@@ -1,6 +1,6 @@
 {
   "name": "@jshsakura/opencode-telegram-bot-plugin",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "OpenCode plugin for Telegram notifications - get notified when tasks complete, respond to permission requests via Telegram",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

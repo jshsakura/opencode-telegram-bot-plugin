@@ -222,20 +222,20 @@ export class TelegramBridge {
   ): Promise<void> {
     const lang = getConfig().language;
     const lines = [
-      `💤 <b>${t('session.idle.title', lang)}</b>`,
-      `────────────────────`,
+      `<b>${t('session.idle.title', lang)}</b>`,
+      `──────────`,
       `<i>${t('session.idle.session', lang)}:</i> <code>${escapeHtml(sessionTitle || sessionID)}</code>`,
     ];
 
     if (summary && (summary.additions > 0 || summary.deletions > 0)) {
       lines.push(``);
-      lines.push(`📊 <b>${t('session.idle.stats', lang)}</b>`);
+      lines.push(`<b>${t('session.idle.stats', lang)}</b>`);
       lines.push(`  <b>+${summary.additions}</b> <i>/</i> <b>-${summary.deletions}</b>`);
     }
 
     if (diffs && diffs.length > 0) {
       lines.push(``);
-      lines.push(`📁 <b>${t('session.idle.files', lang)}</b>`);
+      lines.push(`<b>${t('session.idle.files', lang)}</b>`);
       for (const diff of diffs) {
         lines.push(`  • <code>${escapeHtml(diff.file)}</code>`);
       }
@@ -252,8 +252,8 @@ export class TelegramBridge {
   ): Promise<void> {
     const lang = getConfig().language;
     const lines = [
-      `🔐 <b>${t('permission.title', lang)}</b>`,
-      `────────────────────`,
+      `<b>${t('permission.title', lang)}</b>`,
+      `──────────`,
     ];
     
     lines.push(`<i>${t('permission.action', lang)}:</i>`);
@@ -288,8 +288,8 @@ export class TelegramBridge {
   async sendTodosComplete(_sessionID: string, todos: Array<{ content: string }>): Promise<void> {
     const lang = getConfig().language;
     const lines = [
-      `✅ <b>${t('todos.title', lang)}</b>`,
-      `────────────────────`,
+      `<b>${t('todos.title', lang)}</b>`,
+      `──────────`,
     ];
     
     for (const todo of todos.slice(0, 10)) {
@@ -306,8 +306,8 @@ export class TelegramBridge {
   async sendSubtaskStarted(description: string, agent: string, prompt?: string): Promise<void> {
     const lang = getConfig().language;
     const lines = [
-      `🔀 <b>${t('subtask.title', lang)}</b>`,
-      `────────────────────`,
+      `<b>${t('subtask.title', lang)}</b>`,
+      `──────────`,
       `<i>${t('subtask.agent', lang)}:</i> <b>${escapeHtml(agent)}</b>`,
       ``,
       `<i>${t('subtask.description', lang)}:</i>`,
@@ -327,8 +327,8 @@ export class TelegramBridge {
   async sendError(message: string, sessionID?: string): Promise<void> {
     const lang = getConfig().language;
     const lines = [
-      `❌ <b>${t('error.title', lang)}</b>`,
-      `────────────────────`,
+      `<b>${t('error.title', lang)}</b>`,
+      `──────────`,
     ];
     
     if (sessionID) {

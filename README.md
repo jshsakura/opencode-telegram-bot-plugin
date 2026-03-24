@@ -1,42 +1,32 @@
 # @jshsakura/opencode-telegram-bot-plugin
 
-[OpenCode](https://opencode.ai) plugin that sends Telegram notifications when tasks complete, and lets you respond to permission requests directly from your phone.
+[OpenCode](https://opencode.ai) plugin that sends smart Telegram notifications — only what matters, beautifully formatted.
 
 ## Features
 
-- Task completion notifications
-- Permission request handling with inline buttons (Allow / Always / Reject)
-- Todo list completion summaries
-- Subtask start notifications
-- Error notifications
-- Session summary with file list and change statistics
-- Multi-language support (Korean, English)
-- Notification filtering to control which alerts you receive
-- Duplicate notification prevention with configurable TTL
+- 🔔 **Permission request handling** with inline buttons (Allow / Always / Reject)
+- ✨ **Smart idle notifications** — shows whether the session completed or is waiting for your input
+- 📊 **Session summary** with file change stats and expandable file list
+- 📋 **Todo completion summaries**
+- ❌ **Error notifications** — filtered to only show real errors (not aborts or subagent noise)
+- 🤫 **Subagent noise filtering** — background/unnamed sessions are silently ignored
+- 🌐 **Multi-language support** (Korean, English)
+- 🔁 **Duplicate notification prevention** with configurable TTL
+- ⚡ **409 Conflict safe** — multiple OpenCode instances don't fight over polling
 
 ## Installation
 
 ```bash
-npm install @jshsakura/opencode-telegram-bot-plugin
+npm install -g @jshsakura/opencode-telegram-bot-plugin
 ```
 
 ## Update
 
 ```bash
-npm update @jshsakura/opencode-telegram-bot-plugin
+npm update -g @jshsakura/opencode-telegram-bot-plugin
 ```
 
-Or reinstall for a specific version:
-
-```bash
-npm install @jshsakura/opencode-telegram-bot-plugin@latest
-```
-
-After updating, restart OpenCode:
-
-```bash
-opencode
-```
+After updating, restart OpenCode.
 
 ## Setup
 
@@ -59,7 +49,7 @@ export TELEGRAM_BOT_TOKEN="your-bot-token"
 export TELEGRAM_CHAT_ID="your-chat-id"
 ```
 
-### 4. Add to OpenCode
+### 4. Add to OpenCode Global Config
 
 Add to `~/.config/opencode/opencode.json`:
 
@@ -89,100 +79,61 @@ opencode
 | `TELEGRAM_NOTIFY_TODO` | Todo completion notifications | `true` |
 | `TELEGRAM_NOTIFY_SUBTASK` | Subtask start notifications | `true` |
 | `TELEGRAM_NOTIFY_ERROR` | Error notifications | `true` |
-| `TELEGRAM_NOTIFY_FILE_LIST` | File list in session summary | `true` |
+| `TELEGRAM_NOTIFY_FILE_LIST` | Expandable file list in session summary | `true` |
 | `TELEGRAM_DEDUP_ENABLED` | Enable duplicate notification filtering | `true` |
 | `TELEGRAM_DEDUP_TTL_MS` | Deduplication TTL in milliseconds | `300000` (5 min) |
 
-## Multi-language Support
+## Noise Filtering (v1.1.0+)
 
-The plugin supports Korean and English notifications:
+The plugin automatically suppresses notifications from:
 
-```bash
-# Korean (default)
-export TELEGRAM_LANGUAGE="ko"
+- **Subagents** — sessions with titles like `(@explore subagent)`, `(@oracle subagent)` etc.
+- **Unnamed background sessions** — sessions where the title is just a raw session ID (`ses_xxxx`)
+- **Generic errors** — `The operation was aborted.` and `Model not found:` errors are silently dropped
 
-# English
-export TELEGRAM_LANGUAGE="en"
-```
+This keeps your Telegram clean when using multi-agent workflows like **Oh My OpenCode**.
+
+## Smart Wait Detection (v1.1.0+)
+
+When a session goes idle, the plugin checks if there are unfinished todos:
+
+- **Unfinished todos remaining** → `⏳ 사용자 입력을 기다리고 있습니다` — you need to act
+- **All todos done** → `✨ 작업 완료 및 사용자 대기` — clean completion
+
+No extra LLM calls or API requests — uses already-received todo event data.
 
 ## Notification Filtering
 
-Control which notifications you want to receive:
+Control which notifications you receive:
 
 ```bash
-# Disable session idle notifications
-export TELEGRAM_NOTIFY_SESSION="false"
-
-# Disable file list in session summary
-export TELEGRAM_NOTIFY_FILE_LIST="false"
-
-# Disable todo completion summaries
-export TELEGRAM_NOTIFY_TODO="false"
-
-# Disable subtask notifications
-export TELEGRAM_NOTIFY_SUBTASK="false"
-
-# Disable error notifications (not recommended)
-export TELEGRAM_NOTIFY_ERROR="false"
+export TELEGRAM_NOTIFY_SESSION="false"     # Disable session idle
+export TELEGRAM_NOTIFY_FILE_LIST="false"   # Disable file list
+export TELEGRAM_NOTIFY_TODO="false"        # Disable todo summaries
+export TELEGRAM_NOTIFY_SUBTASK="false"     # Disable subtask notifications
+export TELEGRAM_NOTIFY_ERROR="false"       # Disable errors (not recommended)
 ```
 
 Permission notifications cannot be disabled as they require your response.
 
-## Local Testing
-
-Test the plugin locally before publishing:
-
-```bash
-# Build
-npm run build
-
-# Run tests
-npm test
-
-# Test with npm link (in plugin directory)
-npm link
-
-# Use in another project
-cd /path/to/your-project
-npm link @jshsakura/opencode-telegram-bot-plugin
-
-# After testing, unlink
-npm unlink -g @jshsakura/opencode-telegram-bot-plugin
-```
-
-Or use directly with file path:
-
-```json
-{
-  "plugin": [
-    "./path/to/opencode-telegram-bot-plugin"
-  ]
-}
-```
-
 ## Deduplication
 
-Prevents duplicate notifications for the same event within a time window:
+Prevents duplicate notifications within a time window:
 
 ```bash
-# Enable dedup (default)
 export TELEGRAM_DEDUP_ENABLED="true"
-
-# Set TTL to 10 minutes
-export TELEGRAM_DEDUP_TTL_MS="600000"
+export TELEGRAM_DEDUP_TTL_MS="600000"   # 10 minutes
 ```
 
-## Notifications
+## Notification Reference
 
 | Event | Notification |
 |-------|-------------|
-| Task completes | ✅ Task Complete |
+| Task completes (waiting for input) | ⏳ Waiting for user input |
+| Task completes (all done) | ✨ Task completed |
 | Permission needed | 🔔 Permission Request (with buttons) |
 | All todos done | 📋 All Tasks Complete |
-| Subtask spawned | 🔀 Subtask Started |
-| Session idle | 💤 Session Idle |
-| Session done | 📊 Session Summary (files, changes) |
-| Error occurred | ❌ Error |
+| Error occurred | ❌ Error (real errors only) |
 
 ## License
 

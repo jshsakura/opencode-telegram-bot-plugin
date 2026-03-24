@@ -1,2 +1,0 @@
-TTL first call: true
-TTL second call after 2s: true

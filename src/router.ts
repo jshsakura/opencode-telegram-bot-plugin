@@ -11,6 +11,7 @@ export class EventRouter {
   private sessionTitles = new Map<string, string>();
   private sessionSummaries = new Map<string, SessionSummary>();
   private sessionDiffs = new Map<string, FileDiff[]>();
+  private sessionTodoPending = new Map<string, boolean>(); // true = has unfinished todos
   private evictTimer: NodeJS.Timeout;
 
   constructor(telegram: TelegramBridge) {
@@ -27,6 +28,7 @@ export class EventRouter {
         this.sessionTitles.delete(id);
         this.sessionSummaries.delete(id);
         this.sessionDiffs.delete(id);
+        this.sessionTodoPending.delete(id);
       }
     }
   }
@@ -85,6 +87,13 @@ export class EventRouter {
     }
   }
 
+  private isNoiseSession(sessionID: string, title?: string): boolean {
+    if (!title || title === sessionID) return true;
+    const lowerTitle = title.toLowerCase();
+    if (lowerTitle.includes('subagent)') || lowerTitle.includes('(@')) return true;
+    return false;
+  }
+
   private async handleSessionStatus(event: OpenCodeEvent): Promise<void> {
     const { sessionID, status } = event.properties as {
       sessionID: string;
@@ -124,13 +133,16 @@ export class EventRouter {
     if (!state || state.status !== 'idle') return;
 
     const title = this.sessionTitles.get(sessionID) || sessionID;
+    if (this.isNoiseSession(sessionID, title)) return;
+
     const summary = this.sessionSummaries.get(sessionID);
+    const waitingForUser = this.sessionTodoPending.get(sessionID) === true;
     
     const diffs = getConfig().notifications.fileList 
       ? this.sessionDiffs.get(sessionID) 
       : undefined;
     
-    await this.telegram.sendSessionIdle(title, sessionID, summary, diffs);
+    await this.telegram.sendSessionIdle(title, sessionID, summary, diffs, waitingForUser);
   }
 
   private async handlePermissionUpdated(event: OpenCodeEvent): Promise<void> {
@@ -146,7 +158,7 @@ export class EventRouter {
   private async handleTodoUpdated(event: OpenCodeEvent): Promise<void> {
     if (!getConfig().notifications.todo) return;
 
-    const { todos } = event.properties as {
+    const { sessionID, todos } = event.properties as {
       sessionID: string;
       todos: Array<{
         content: string;
@@ -160,11 +172,11 @@ export class EventRouter {
       (t) => t.status === 'completed' || t.status === 'cancelled'
     );
 
+    // Track whether there are pending/in-progress todos for the waiting-for-user signal
+    this.sessionTodoPending.set(sessionID, !allCompleted);
+
     if (allCompleted) {
-      await this.telegram.sendTodosComplete(
-        (event.properties as { sessionID: string }).sessionID,
-        todos
-      );
+      await this.telegram.sendTodosComplete(sessionID, todos);
     }
   }
 
@@ -207,6 +219,13 @@ export class EventRouter {
       message = String(error.data.message);
     }
 
-    await this.telegram.sendError(message, sessionID);
+    const title = this.sessionTitles.get(sessionID) || sessionID;
+    if (this.isNoiseSession(sessionID, title)) return;
+
+    if (message === 'The operation was aborted.' || message.startsWith('Model not found:')) {
+      return;
+    }
+
+    await this.telegram.sendError(message, title !== sessionID ? title : sessionID);
   }
 }

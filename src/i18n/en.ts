@@ -1,7 +1,7 @@
 export const en = {
   session: {
     idle: {
-      title: "🤖 Task Completed",
+      title: "✨ Task Completed & Waiting",
       session: "Session",
       stats: "📊 Changes",
       files: "📁 Files",
@@ -48,7 +48,7 @@ export const en = {
     status_waiting: "Waiting",
   },
   error: {
-    title: "❌ Error Occurred",
+    title: "❌ Error",
     subtitle: "A problem was encountered",
     retry_suggested: "Please try again",
     support_needed: "Support may be needed",

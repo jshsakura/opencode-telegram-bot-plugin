@@ -126,7 +126,15 @@ export class TelegramBridge {
           }
         }
       } catch (err) {
-        console.error('[opencode-telegram] Poll error:', err instanceof Error ? err.message : err);
+        const msg = err instanceof Error ? err.message : String(err);
+        // 409 Conflict = another instance is already polling; yield gracefully
+        if (msg.includes('409') || msg.toLowerCase().includes('conflict')) {
+          console.log('[opencode-telegram] Another instance is polling (409 Conflict). Switching to send-only mode.');
+          this.polling = false;
+          this.releasePollLock();
+          return;
+        }
+        console.error('[opencode-telegram] Poll error:', msg);
         await sleep(backoff);
         backoff = Math.min(backoff * 2, MAX_BACKOFF_MS);
       }
@@ -218,27 +226,26 @@ export class TelegramBridge {
     sessionTitle: string, 
     sessionID: string, 
     summary?: SessionSummary, 
-    diffs?: FileDiff[]
+    diffs?: FileDiff[],
+    waitingForUser?: boolean
   ): Promise<void> {
     const lang = getConfig().language;
+    const titleKey = waitingForUser ? 'session.idle.waiting_for_input' : 'session.idle.title';
     const lines = [
-      `<b>${t('session.idle.title', lang)}</b>`,
-      `──────────`,
+      `<b>${t(titleKey, lang)}</b>`,
       `<i>${t('session.idle.session', lang)}:</i> <code>${escapeHtml(sessionTitle || sessionID)}</code>`,
     ];
 
     if (summary && (summary.additions > 0 || summary.deletions > 0)) {
       lines.push(``);
-      lines.push(`<b>${t('session.idle.stats', lang)}</b>`);
-      lines.push(`  <b>+${summary.additions}</b> <i>/</i> <b>-${summary.deletions}</b>`);
+      lines.push(`${t('session.idle.stats', lang)}  <b>+${summary.additions}</b> / <b>-${summary.deletions}</b>`);
     }
 
     if (diffs && diffs.length > 0) {
+      const fileLines = diffs.map(d => `  • <code>${escapeHtml(d.file)}</code>`).join('\n');
       lines.push(``);
-      lines.push(`<b>${t('session.idle.files', lang)}</b>`);
-      for (const diff of diffs) {
-        lines.push(`  • <code>${escapeHtml(diff.file)}</code>`);
-      }
+      lines.push(`${t('session.idle.files', lang)}`);
+      lines.push(`<blockquote expandable>${fileLines}</blockquote>`);
     }
 
     await this.sendMessage(lines.join('\n'));
@@ -324,15 +331,14 @@ export class TelegramBridge {
     await this.sendMessage(lines.join('\n'));
   }
 
-  async sendError(message: string, sessionID?: string): Promise<void> {
+  async sendError(message: string, sessionTitle?: string): Promise<void> {
     const lang = getConfig().language;
     const lines = [
       `<b>${t('error.title', lang)}</b>`,
-      `──────────`,
     ];
     
-    if (sessionID) {
-      lines.push(`<i>${t('session.idle.session', lang)}:</i> <code>${escapeHtml(sessionID)}</code>`);
+    if (sessionTitle) {
+      lines.push(`<i>${t('session.idle.session', lang)}:</i> <code>${escapeHtml(sessionTitle)}</code>`);
       lines.push(``);
     }
     lines.push(`<code>${escapeHtml(message)}</code>`);

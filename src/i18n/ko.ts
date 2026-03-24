@@ -1,7 +1,7 @@
 export const ko = {
   session: {
     idle: {
-      title: "🤖 작업이 완료되었습니다",
+      title: "✨ 작업 완료 및 사용자 대기",
       session: "세션",
       stats: "📊 변경 사항",
       files: "📁 파일",
@@ -48,7 +48,7 @@ export const ko = {
     status_waiting: "대기 중",
   },
   error: {
-    title: "❌ 오류가 발생했습니다",
+    title: "❌ 오류 발생",
     subtitle: "작업 중 문제가 발생했습니다",
     retry_suggested: "다시 시도해 주세요",
     support_needed: "지원이 필요할 수 있습니다",

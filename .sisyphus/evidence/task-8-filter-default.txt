@@ -1,2 +1,0 @@
-[opencode-telegram] Failed to send message: Telegram API error: Not Found
-Subtask event handled - API call should be made (default enabled)

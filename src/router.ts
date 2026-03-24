@@ -93,8 +93,11 @@ export class EventRouter {
   }
 
   private isNoiseSession(sessionID: string, title?: string): boolean {
-    if (!title || title === sessionID) return true;
-    const lowerTitle = title.toLowerCase();
+    // No title received yet is NOT enough to call it noise —
+    // check if it literally looks like an auto-generated session ID (ses_xxxx)
+    const effectiveTitle = title || sessionID;
+    if (/^ses_[a-zA-Z0-9]+$/.test(effectiveTitle)) return true;
+    const lowerTitle = effectiveTitle.toLowerCase();
     if (lowerTitle.includes('subagent)') || lowerTitle.includes('(@')) return true;
     return false;
   }

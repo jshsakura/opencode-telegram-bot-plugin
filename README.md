@@ -93,6 +93,12 @@ The plugin automatically suppresses notifications from:
 
 This keeps your Telegram clean when using multi-agent workflows like **Oh My OpenCode**.
 
+## Idle Notification Debounce (v1.1.2+)
+
+Idle notifications are delayed **15 seconds** before being sent. If the session goes busy again within that window (e.g. due to `system-reminder` injections), the notification is cancelled.
+
+This prevents rapid idle→busy→idle cycles from spamming your Telegram.
+
 ## Smart Wait Detection (v1.1.0+)
 
 When a session goes idle, the plugin checks if there are unfinished todos:

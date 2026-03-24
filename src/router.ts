@@ -12,7 +12,10 @@ export class EventRouter {
   private sessionSummaries = new Map<string, SessionSummary>();
   private sessionDiffs = new Map<string, FileDiff[]>();
   private sessionTodoPending = new Map<string, boolean>(); // true = has unfinished todos
+  private idleDebounceTimers = new Map<string, NodeJS.Timeout>(); // debounce idle notifs
   private evictTimer: NodeJS.Timeout;
+
+  private static readonly IDLE_DEBOUNCE_MS = 15_000; // 15s — survives system-reminder cycles
 
   constructor(telegram: TelegramBridge) {
     this.telegram = telegram;
@@ -29,6 +32,8 @@ export class EventRouter {
         this.sessionSummaries.delete(id);
         this.sessionDiffs.delete(id);
         this.sessionTodoPending.delete(id);
+        const t = this.idleDebounceTimers.get(id);
+        if (t) { clearTimeout(t); this.idleDebounceTimers.delete(id); }
       }
     }
   }
@@ -103,6 +108,9 @@ export class EventRouter {
     const prev = this.sessionStates.get(sessionID);
 
     if (status.type === 'busy') {
+      // Cancel any pending idle notification — session is active again
+      const existing = this.idleDebounceTimers.get(sessionID);
+      if (existing) { clearTimeout(existing); this.idleDebounceTimers.delete(sessionID); }
       this.sessionStates.set(sessionID, {
         ...prev,
         status: 'busy',
@@ -135,14 +143,27 @@ export class EventRouter {
     const title = this.sessionTitles.get(sessionID) || sessionID;
     if (this.isNoiseSession(sessionID, title)) return;
 
-    const summary = this.sessionSummaries.get(sessionID);
-    const waitingForUser = this.sessionTodoPending.get(sessionID) === true;
-    
-    const diffs = getConfig().notifications.fileList 
-      ? this.sessionDiffs.get(sessionID) 
-      : undefined;
-    
-    await this.telegram.sendSessionIdle(title, sessionID, summary, diffs, waitingForUser);
+    // Cancel any existing debounce for this session and reschedule
+    const existing = this.idleDebounceTimers.get(sessionID);
+    if (existing) clearTimeout(existing);
+
+    const timer = setTimeout(async () => {
+      this.idleDebounceTimers.delete(sessionID);
+      // Re-check status — if it went busy again, skip
+      const current = this.sessionStates.get(sessionID);
+      if (!current || current.status !== 'idle') return;
+
+      const summary = this.sessionSummaries.get(sessionID);
+      const waitingForUser = this.sessionTodoPending.get(sessionID) === true;
+      const diffs = getConfig().notifications.fileList
+        ? this.sessionDiffs.get(sessionID)
+        : undefined;
+
+      await this.telegram.sendSessionIdle(title, sessionID, summary, diffs, waitingForUser);
+    }, EventRouter.IDLE_DEBOUNCE_MS);
+
+    timer.unref();
+    this.idleDebounceTimers.set(sessionID, timer);
   }
 
   private async handlePermissionUpdated(event: OpenCodeEvent): Promise<void> {

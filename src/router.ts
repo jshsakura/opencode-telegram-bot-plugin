@@ -199,13 +199,18 @@ export class EventRouter {
     // Track whether there are pending/in-progress todos for the waiting-for-user signal
     this.sessionTodoPending.set(sessionID, !allCompleted);
 
+    // Don't notify for noise sessions (subagents, unnamed background sessions)
+    const title = this.sessionTitles.get(sessionID);
+    if (this.isNoiseSession(sessionID, title)) return;
+
     if (allCompleted) {
       await this.telegram.sendTodosComplete(sessionID, todos);
     }
   }
 
   private async handleMessagePartUpdated(event: OpenCodeEvent): Promise<void> {
-    const { part } = event.properties as {
+    const { sessionID, part } = event.properties as {
+      sessionID?: string;
       part: {
         type: string;
         description?: string;
@@ -216,9 +221,20 @@ export class EventRouter {
 
     if (part.type === 'subtask') {
       if (!getConfig().notifications.subtask) return;
+
+      // Filter out subtasks from noise sessions
+      if (sessionID) {
+        const title = this.sessionTitles.get(sessionID);
+        if (this.isNoiseSession(sessionID, title)) return;
+      }
+
+      // Also filter if the agent itself is a subagent pattern
+      const agent = part.agent || '';
+      if (agent.toLowerCase().includes('(@') || agent.toLowerCase().includes('subagent')) return;
+
       await this.telegram.sendSubtaskStarted(
         part.description || '',
-        part.agent || 'unknown',
+        agent || 'unknown',
         part.prompt
       );
     }

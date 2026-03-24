@@ -90,6 +90,8 @@ The plugin automatically suppresses notifications from:
 - **Subagents** — sessions with titles like `(@explore subagent)`, `(@oracle subagent)` etc.
 - **Unnamed background sessions** — sessions where the title is just a raw session ID (`ses_xxxx`)
 - **Generic errors** — `The operation was aborted.` and `Model not found:` errors are silently dropped
+- **Todo completions** from subagent/background sessions are also suppressed (v1.1.4+)
+- **Subtask notifications** from subagent sessions or with subagent-style agent names are also suppressed (v1.1.4+)
 
 This keeps your Telegram clean when using multi-agent workflows like **Oh My OpenCode**.
 

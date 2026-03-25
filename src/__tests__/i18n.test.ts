@@ -5,7 +5,7 @@ describe("i18n module", () => {
   describe("t() function", () => {
     describe("Korean translations", () => {
       it("should return Korean session.idle.title", () => {
-        expect(t("session.idle.title", "ko")).toBe("🤖 작업이 완료되었습니다");
+        expect(t("session.idle.title", "ko")).toBe("✨ 작업 완료 및 사용자 대기");
       });
 
       it("should return Korean session.waiting.title", () => {
@@ -41,7 +41,7 @@ describe("i18n module", () => {
       });
 
       it("should return Korean error.title", () => {
-        expect(t("error.title", "ko")).toBe("❌ 오류가 발생했습니다");
+        expect(t("error.title", "ko")).toBe("❌ 오류 발생");
       });
 
       it("should return Korean button.allowed", () => {
@@ -55,7 +55,7 @@ describe("i18n module", () => {
 
     describe("English translations", () => {
       it("should return English session.idle.title", () => {
-        expect(t("session.idle.title", "en")).toBe("🤖 Task Completed");
+        expect(t("session.idle.title", "en")).toBe("✨ Task Completed & Waiting");
       });
 
       it("should return English session.waiting.title", () => {
@@ -91,7 +91,7 @@ describe("i18n module", () => {
       });
 
       it("should return English error.title", () => {
-        expect(t("error.title", "en")).toBe("❌ Error Occurred");
+        expect(t("error.title", "en")).toBe("❌ Error");
       });
 
       it("should return English button.allowed", () => {
@@ -114,11 +114,11 @@ describe("i18n module", () => {
 
       it("should fallback to Korean for invalid language", () => {
         // @ts-expect-error - Testing invalid language
-        expect(t("session.idle.title", "invalid")).toBe("🤖 작업이 완료되었습니다");
+        expect(t("session.idle.title", "invalid")).toBe("✨ 작업 완료 및 사용자 대기");
       });
 
       it("should use default language (Korean) when no language specified", () => {
-        expect(t("session.idle.title")).toBe("🤖 작업이 완료되었습니다");
+        expect(t("session.idle.title")).toBe("✨ 작업 완료 및 사용자 대기");
       });
     });
   });

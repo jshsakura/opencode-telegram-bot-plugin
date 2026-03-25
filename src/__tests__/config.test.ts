@@ -40,16 +40,22 @@ describe('config', () => {
       expect(config.notifications.permission).toBe(true);
     });
 
-    it('should return default notifications.todo as true', () => {
+    it('should return default notifications.todo as false', () => {
       delete process.env['TELEGRAM_NOTIFY_TODO'];
       const config = getConfig();
-      expect(config.notifications.todo).toBe(true);
+      expect(config.notifications.todo).toBe(false);
     });
 
-    it('should return default notifications.subtask as true', () => {
+    it('should return default notifications.subtask as false', () => {
       delete process.env['TELEGRAM_NOTIFY_SUBTASK'];
       const config = getConfig();
-      expect(config.notifications.subtask).toBe(true);
+      expect(config.notifications.subtask).toBe(false);
+    });
+
+    it('should return default notifications.fileList as false', () => {
+      delete process.env['TELEGRAM_NOTIFY_FILE_LIST'];
+      const config = getConfig();
+      expect(config.notifications.fileList).toBe(false);
     });
 
     it('should return default notifications.error as true', () => {
@@ -216,6 +222,108 @@ describe('config', () => {
       expect(config).toHaveProperty('language');
       expect(config).toHaveProperty('notifications');
       expect(config).toHaveProperty('dedup');
+    });
+  });
+
+  describe('rateLimit config', () => {
+    it('should return default rateLimit.enabled as true', () => {
+      delete process.env['TELEGRAM_RATE_LIMIT_ENABLED'];
+      const config = getConfig();
+      expect(config.rateLimit.enabled).toBe(true);
+    });
+
+    it('should return default rateLimit.minIntervalMs as 5000', () => {
+      delete process.env['TELEGRAM_RATE_LIMIT_INTERVAL_MS'];
+      const config = getConfig();
+      expect(config.rateLimit.minIntervalMs).toBe(5000);
+    });
+
+    it('should parse rateLimit.enabled from env', () => {
+      process.env['TELEGRAM_RATE_LIMIT_ENABLED'] = 'false';
+      const config = getConfig();
+      expect(config.rateLimit.enabled).toBe(false);
+    });
+
+    it('should parse rateLimit.minIntervalMs from env', () => {
+      process.env['TELEGRAM_RATE_LIMIT_INTERVAL_MS'] = '2000';
+      const config = getConfig();
+      expect(config.rateLimit.minIntervalMs).toBe(2000);
+    });
+  });
+
+  describe('message config', () => {
+    it('should return default message.maxLength as 900', () => {
+      delete process.env['TELEGRAM_MESSAGE_MAX_LENGTH'];
+      const config = getConfig();
+      expect(config.message.maxLength).toBe(900);
+    });
+
+    it('should return default message.truncateSuffix as ...', () => {
+      delete process.env['TELEGRAM_MESSAGE_TRUNCATE_SUFFIX'];
+      const config = getConfig();
+      expect(config.message.truncateSuffix).toBe('...');
+    });
+
+    it('should return default message.compactWhitespace as true', () => {
+      delete process.env['TELEGRAM_MESSAGE_COMPACT_WHITESPACE'];
+      const config = getConfig();
+      expect(config.message.compactWhitespace).toBe(true);
+    });
+
+    it('should parse message.maxLength from env', () => {
+      process.env['TELEGRAM_MESSAGE_MAX_LENGTH'] = '3000';
+      const config = getConfig();
+      expect(config.message.maxLength).toBe(3000);
+    });
+
+    it('should parse message.truncateSuffix from env', () => {
+      process.env['TELEGRAM_MESSAGE_TRUNCATE_SUFFIX'] = '…';
+      const config = getConfig();
+      expect(config.message.truncateSuffix).toBe('…');
+    });
+
+    it('should parse message.compactWhitespace from env', () => {
+      process.env['TELEGRAM_MESSAGE_COMPACT_WHITESPACE'] = 'false';
+      const config = getConfig();
+      expect(config.message.compactWhitespace).toBe(false);
+    });
+  });
+
+  describe('batch config', () => {
+    it('should return default batch.enabled as true', () => {
+      delete process.env['TELEGRAM_BATCH_ENABLED'];
+      const config = getConfig();
+      expect(config.batch.enabled).toBe(true);
+    });
+
+    it('should return default batch.intervalMs as 5000', () => {
+      delete process.env['TELEGRAM_BATCH_INTERVAL_MS'];
+      const config = getConfig();
+      expect(config.batch.intervalMs).toBe(5000);
+    });
+
+    it('should return default batch.maxBatchSize as 10', () => {
+      delete process.env['TELEGRAM_BATCH_MAX_SIZE'];
+      const config = getConfig();
+      expect(config.batch.maxBatchSize).toBe(10);
+    });
+
+    it('should parse batch.enabled from env', () => {
+      process.env['TELEGRAM_BATCH_ENABLED'] = 'false';
+      const config = getConfig();
+      expect(config.batch.enabled).toBe(false);
+    });
+
+    it('should parse batch.intervalMs from env', () => {
+      process.env['TELEGRAM_BATCH_INTERVAL_MS'] = '5000';
+      const config = getConfig();
+      expect(config.batch.intervalMs).toBe(5000);
+    });
+
+    it('should parse batch.maxBatchSize from env', () => {
+      process.env['TELEGRAM_BATCH_MAX_SIZE'] = '10';
+      const config = getConfig();
+      expect(config.batch.maxBatchSize).toBe(10);
     });
   });
 });

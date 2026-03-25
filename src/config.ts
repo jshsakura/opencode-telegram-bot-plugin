@@ -16,6 +16,20 @@ export interface TelegramPluginConfig {
     enabled: boolean;
     ttlMs: number;
   };
+  rateLimit: {
+    enabled: boolean;
+    minIntervalMs: number;
+  };
+  message: {
+    maxLength: number;
+    truncateSuffix: string;
+    compactWhitespace: boolean;
+  };
+  batch: {
+    enabled: boolean;
+    intervalMs: number;
+    maxBatchSize: number;
+  };
 }
 
 const DEFAULT_CONFIG: TelegramPluginConfig = {
@@ -23,14 +37,28 @@ const DEFAULT_CONFIG: TelegramPluginConfig = {
   notifications: {
     session: true,
     permission: true,
-    todo: true,
-    subtask: true,
+    todo: false,
+    subtask: false,
     error: true,
-    fileList: true,
+    fileList: false,
   },
   dedup: {
     enabled: true,
     ttlMs: 300000, // 5 minutes
+  },
+  rateLimit: {
+    enabled: true,
+    minIntervalMs: 5000,
+  },
+  message: {
+    maxLength: 900,
+    truncateSuffix: '...',
+    compactWhitespace: true,
+  },
+  batch: {
+    enabled: true,
+    intervalMs: 5000,
+    maxBatchSize: 10,
   },
 };
 
@@ -75,6 +103,20 @@ export function getConfig(): TelegramPluginConfig {
     dedup: {
       enabled: parseBoolean(process.env['TELEGRAM_DEDUP_ENABLED'], DEFAULT_CONFIG.dedup.enabled),
       ttlMs: parseNumber(process.env['TELEGRAM_DEDUP_TTL_MS'], DEFAULT_CONFIG.dedup.ttlMs),
+    },
+    rateLimit: {
+      enabled: parseBoolean(process.env['TELEGRAM_RATE_LIMIT_ENABLED'], DEFAULT_CONFIG.rateLimit.enabled),
+      minIntervalMs: parseNumber(process.env['TELEGRAM_RATE_LIMIT_INTERVAL_MS'], DEFAULT_CONFIG.rateLimit.minIntervalMs),
+    },
+    message: {
+      maxLength: parseNumber(process.env['TELEGRAM_MESSAGE_MAX_LENGTH'], DEFAULT_CONFIG.message.maxLength),
+      truncateSuffix: process.env['TELEGRAM_MESSAGE_TRUNCATE_SUFFIX'] ?? DEFAULT_CONFIG.message.truncateSuffix,
+      compactWhitespace: parseBoolean(process.env['TELEGRAM_MESSAGE_COMPACT_WHITESPACE'], DEFAULT_CONFIG.message.compactWhitespace),
+    },
+    batch: {
+      enabled: parseBoolean(process.env['TELEGRAM_BATCH_ENABLED'], DEFAULT_CONFIG.batch.enabled),
+      intervalMs: parseNumber(process.env['TELEGRAM_BATCH_INTERVAL_MS'], DEFAULT_CONFIG.batch.intervalMs),
+      maxBatchSize: parseNumber(process.env['TELEGRAM_BATCH_MAX_SIZE'], DEFAULT_CONFIG.batch.maxBatchSize),
     },
   };
 

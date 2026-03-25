@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
 
-const STORAGE_PATH = path.join(os.tmpdir(), 'opencode-telegram-dedup.json');
+const STORAGE_PATH = path.join(os.tmpdir(), 'opencode-telegram-bot-dedup.json');
 
 describe('dedup', () => {
   beforeEach(() => {

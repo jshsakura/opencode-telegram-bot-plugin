@@ -7,13 +7,21 @@ import { t } from './i18n/index.js';
 import { getConfig } from './config.js';
 import { checkAndStore } from './dedup.js';
 
-const LOCK_PATH = path.join(os.tmpdir(), 'opencode-telegram.lock');
+const LOCK_PATH = path.join(os.tmpdir(), 'opencode-telegram-bot.lock');
 const MAX_BACKOFF_MS = 60_000;
 const INITIAL_BACKOFF_MS = 5_000;
+const PENDING_PERMISSION_TTL_MS = 30 * 60 * 1000;
 
 interface PendingPermission {
   sessionID: string;
   permissionID: string;
+  createdAt: number;
+}
+
+interface QueuedMessage {
+  text: string;
+  inlineKeyboard?: InlineKeyboardButton[][];
+  priority: 'high' | 'normal';
 }
 
 export class TelegramBridge {
@@ -29,6 +37,11 @@ export class TelegramBridge {
   private nextCallbackKey = 1;
   private pendingPermissions = new Map<number, PendingPermission>();
 
+  private lastSendTime = 0;
+  private messageQueue: QueuedMessage[] = [];
+  private batchTimer: ReturnType<typeof setTimeout> | null = null;
+  private isFlushing = false;
+  private sendChain: Promise<void> = Promise.resolve();
   constructor(config: TelegramConfig) {
     this.botToken = config.botToken;
     this.chatId = config.chatId;
@@ -45,16 +58,24 @@ export class TelegramBridge {
     this.isPollingOwner = this.acquirePollLock();
     
     if (this.isPollingOwner) {
-      console.log('[opencode-telegram] Bot polling started (this instance owns the poll lock)');
+        console.log('[opencode-telegram-bot] Bot polling started (this instance owns the poll lock)');
       this.pollLoop();
     } else {
-      console.log('[opencode-telegram] Another instance is polling. This instance will only send notifications.');
+        console.log('[opencode-telegram-bot] Another instance is polling. This instance will only send notifications.');
     }
   }
 
   // Synchronous — safe to call from process.on("exit")
   stop(): void {
     this.polling = false;
+    if (this.batchTimer) {
+      clearTimeout(this.batchTimer);
+      this.batchTimer = null;
+    }
+
+    if (this.messageQueue.length > 0 && !this.isFlushing) {
+      void this.flushBatchQueue(getConfig());
+    }
     this.releasePollLock();
   }
 
@@ -127,14 +148,13 @@ export class TelegramBridge {
         }
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
-        // 409 Conflict = another instance is already polling; yield gracefully
         if (msg.includes('409') || msg.toLowerCase().includes('conflict')) {
-          console.log('[opencode-telegram] Another instance is polling (409 Conflict). Switching to send-only mode.');
+          console.log('[opencode-telegram-bot] Another instance is polling (409 Conflict). Switching to send-only mode.');
           this.polling = false;
           this.releasePollLock();
           return;
         }
-        console.error('[opencode-telegram] Poll error:', msg);
+        console.error('[opencode-telegram-bot] Poll error:', msg);
         await sleep(backoff);
         backoff = Math.min(backoff * 2, MAX_BACKOFF_MS);
       }
@@ -174,6 +194,7 @@ export class TelegramBridge {
       return;
     }
 
+    this.cleanupPendingPermissions();
     const pending = this.pendingPermissions.get(key);
     if (!pending) {
       await this.apiCall('answerCallbackQuery', {
@@ -233,19 +254,18 @@ export class TelegramBridge {
     const titleKey = waitingForUser ? 'session.idle.waiting_for_input' : 'session.idle.title';
     const lines = [
       `<b>${t(titleKey, lang)}</b>`,
-      `<i>${t('session.idle.session', lang)}:</i> <code>${escapeHtml(sessionTitle || sessionID)}</code>`,
+      `<code>${escapeHtml(sessionTitle || sessionID)}</code>`,
     ];
 
     if (summary && (summary.additions > 0 || summary.deletions > 0)) {
-      lines.push(``);
-      lines.push(`${t('session.idle.stats', lang)}  <b>+${summary.additions}</b> / <b>-${summary.deletions}</b>`);
+      lines.push(`<b>+${summary.additions}</b>/<b>-${summary.deletions}</b>`);
     }
 
     if (diffs && diffs.length > 0) {
-      const fileLines = diffs.map(d => `  • <code>${escapeHtml(d.file)}</code>`).join('\n');
-      lines.push(``);
-      lines.push(`${t('session.idle.files', lang)}`);
-      lines.push(`<blockquote expandable>${fileLines}</blockquote>`);
+      lines.push(`<b>${t('session.idle.files', lang)}</b>`);
+      for (const diff of diffs) {
+        lines.push(`• <code>${escapeHtml(diff.file)}</code>`);
+      }
     }
 
     await this.sendMessage(lines.join('\n'));
@@ -260,25 +280,23 @@ export class TelegramBridge {
     const lang = getConfig().language;
     const lines = [
       `<b>${t('permission.title', lang)}</b>`,
-      `──────────`,
     ];
     
     lines.push(`<i>${t('permission.action', lang)}:</i>`);
     lines.push(`  ${escapeHtml(title)}`);
 
     if (metadata['command']) {
-      lines.push(``);
       lines.push(`<i>${t('permission.command', lang)}:</i>`);
       lines.push(`  <code>${escapeHtml(String(metadata['command']))}</code>`);
     }
     if (metadata['path']) {
-      lines.push(``);
       lines.push(`<i>${t('permission.path', lang)}:</i>`);
       lines.push(`  <code>${escapeHtml(String(metadata['path']))}</code>`);
     }
 
+    this.cleanupPendingPermissions();
     const key = this.nextCallbackKey++;
-    this.pendingPermissions.set(key, { sessionID, permissionID });
+    this.pendingPermissions.set(key, { sessionID, permissionID, createdAt: Date.now() });
 
     // callback_data format: "p:<key>:<response>"
     const keyboard: InlineKeyboardButton[][] = [
@@ -296,7 +314,6 @@ export class TelegramBridge {
     const lang = getConfig().language;
     const lines = [
       `<b>${t('todos.title', lang)}</b>`,
-      `──────────`,
     ];
     
     for (const todo of todos.slice(0, 10)) {
@@ -314,16 +331,13 @@ export class TelegramBridge {
     const lang = getConfig().language;
     const lines = [
       `<b>${t('subtask.title', lang)}</b>`,
-      `──────────`,
       `<i>${t('subtask.agent', lang)}:</i> <b>${escapeHtml(agent)}</b>`,
-      ``,
       `<i>${t('subtask.description', lang)}:</i>`,
       `  ${escapeHtml(description)}`,
     ];
 
     if (prompt) {
       const truncated = prompt.length > 200 ? prompt.slice(0, 200) + '...' : prompt;
-      lines.push(``);
       lines.push(`<i>${t('subtask.prompt', lang)}:</i>`);
       lines.push(`  <code>${escapeHtml(truncated)}</code>`);
     }
@@ -339,7 +353,6 @@ export class TelegramBridge {
     
     if (sessionTitle) {
       lines.push(`<i>${t('session.idle.session', lang)}:</i> <code>${escapeHtml(sessionTitle)}</code>`);
-      lines.push(``);
     }
     lines.push(`<code>${escapeHtml(message)}</code>`);
 
@@ -347,32 +360,140 @@ export class TelegramBridge {
   }
 
   private async sendMessage(text: string, inlineKeyboard?: InlineKeyboardButton[][], skipDedup?: boolean): Promise<void> {
-    // Check dedup before sending (skip for permission requests)
-    if (!skipDedup) {
-      const config = getConfig();
-      if (config.dedup.enabled) {
-        try {
-          const shouldSend = await checkAndStore(text, config.dedup.ttlMs);
-          if (!shouldSend) {
-            // Duplicate message within TTL, skip sending
-            return;
-          }
-        } catch {
-          // If dedup check fails, proceed with sending (graceful degradation)
+    const config = getConfig();
+
+    let processedText = config.message.compactWhitespace
+      ? this.compactWhitespace(text)
+      : text;
+
+    processedText = this.truncateMessage(processedText, config.message.maxLength, config.message.truncateSuffix);
+
+    if (!skipDedup && config.dedup.enabled) {
+      try {
+        const shouldSend = await checkAndStore(processedText, config.dedup.ttlMs);
+        if (!shouldSend) {
+          return;
         }
+      } catch {
       }
     }
 
-    try {
-      await this.apiCall('sendMessage', {
-        chat_id: this.chatId,
-        text,
-        parse_mode: 'HTML',
-        ...(inlineKeyboard ? { reply_markup: { inline_keyboard: inlineKeyboard } } : {}),
-      });
-    } catch (err) {
-      console.error('[opencode-telegram] Failed to send message:', err instanceof Error ? err.message : err);
+    const priority: 'high' | 'normal' = skipDedup ? 'high' : 'normal';
+
+    if (config.batch.enabled && priority === 'normal') {
+      this.messageQueue.push({ text: processedText, inlineKeyboard, priority });
+      this.scheduleBatchFlush(config);
+    } else {
+      await this.sendWithRateLimit(processedText, inlineKeyboard, config);
     }
+  }
+
+  private compactWhitespace(text: string): string {
+    const parts = text.split(/(<code>[\s\S]*?<\/code>)/g);
+
+    return parts
+      .map((part, index) => {
+        if (index % 2 === 1) {
+          return part;
+        }
+
+        return part
+          .replace(/[ \t]+/g, ' ')
+          .replace(/\n{3,}/g, '\n\n');
+      })
+      .join('')
+      .trim();
+  }
+
+  private cleanupPendingPermissions(): void {
+    const now = Date.now();
+    for (const [key, pending] of this.pendingPermissions.entries()) {
+      if (now - pending.createdAt > PENDING_PERMISSION_TTL_MS) {
+        this.pendingPermissions.delete(key);
+      }
+    }
+  }
+
+  private truncateMessage(text: string, maxLength: number, suffix: string): string {
+    if (text.length <= maxLength) return text;
+
+    if (maxLength <= 0) return '';
+    if (suffix.length >= maxLength) return suffix.slice(0, maxLength);
+
+    return text.slice(0, maxLength - suffix.length) + suffix;
+  }
+
+  private scheduleBatchFlush(config: ReturnType<typeof getConfig>): void {
+    if (this.batchTimer) return;
+    
+    if (this.messageQueue.length >= config.batch.maxBatchSize) {
+      this.flushBatchQueue(config);
+      return;
+    }
+
+    this.batchTimer = setTimeout(() => {
+      this.batchTimer = null;
+      this.flushBatchQueue(getConfig());
+    }, config.batch.intervalMs);
+  }
+
+  private async flushBatchQueue(config: ReturnType<typeof getConfig>): Promise<void> {
+    if (this.isFlushing || this.messageQueue.length === 0) return;
+    
+    this.isFlushing = true;
+    
+    try {
+      const batch = this.messageQueue.splice(0, config.batch.maxBatchSize);
+      
+      if (batch.length === 1) {
+        const msg = batch[0];
+        await this.sendWithRateLimit(msg.text, msg.inlineKeyboard, config);
+      } else {
+        const combinedText = batch.map((m, i) => `━━━ [${i + 1}] ━━━\n${m.text}`).join('\n\n');
+        const truncated = this.truncateMessage(combinedText, config.message.maxLength, config.message.truncateSuffix);
+        await this.sendWithRateLimit(truncated, undefined, config);
+      }
+    } finally {
+      this.isFlushing = false;
+      
+      if (this.messageQueue.length > 0) {
+        this.scheduleBatchFlush(config);
+      }
+    }
+  }
+
+  private async sendWithRateLimit(
+    text: string, 
+    inlineKeyboard: InlineKeyboardButton[][] | undefined, 
+    config: ReturnType<typeof getConfig>
+  ): Promise<void> {
+    const task = async () => {
+      if (config.rateLimit.enabled) {
+        const now = Date.now();
+        const elapsed = now - this.lastSendTime;
+        const minInterval = config.rateLimit.minIntervalMs;
+
+        if (elapsed < minInterval) {
+          await sleep(minInterval - elapsed);
+        }
+        this.lastSendTime = Date.now();
+      }
+
+      try {
+        await this.apiCall('sendMessage', {
+          chat_id: this.chatId,
+          text,
+          parse_mode: 'HTML',
+          ...(inlineKeyboard ? { reply_markup: { inline_keyboard: inlineKeyboard } } : {}),
+        });
+      } catch (err) {
+        console.error('[opencode-telegram-bot] Failed to send message:', err instanceof Error ? err.message : err);
+      }
+    };
+
+    const next = this.sendChain.then(task, task);
+    this.sendChain = next.catch(() => {});
+    await next;
   }
 
   private apiCall<T>(method: string, payload: Record<string, unknown>): Promise<T> {

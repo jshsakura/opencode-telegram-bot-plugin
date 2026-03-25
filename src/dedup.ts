@@ -5,7 +5,7 @@ import os from 'node:os';
 
 export const DEFAULT_TTL_MS = 300000;
 
-const STORAGE_PATH = path.join(os.tmpdir(), 'opencode-telegram-dedup.json');
+const STORAGE_PATH = path.join(os.tmpdir(), 'opencode-telegram-bot-dedup.json');
 
 interface HashEntry {
   timestamp: number;

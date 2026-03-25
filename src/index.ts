@@ -22,7 +22,7 @@ const OpencodeTelegram = async (ctx: PluginContext): Promise<PluginResult> => {
 
   if (!botToken || !chatId) {
     console.warn(
-      '[opencode-telegram] Missing TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID environment variables. Plugin disabled.'
+        '[opencode-telegram-bot] Missing TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID environment variables. Plugin disabled.'
     );
     return {};
   }
@@ -39,7 +39,7 @@ const OpencodeTelegram = async (ctx: PluginContext): Promise<PluginResult> => {
       });
     } catch (err) {
       console.error(
-        '[opencode-telegram] Failed to reply to permission:',
+      '[opencode-telegram-bot] Failed to reply to permission:',
         err instanceof Error ? err.message : err
       );
     }

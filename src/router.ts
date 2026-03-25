@@ -170,6 +170,8 @@ export class EventRouter {
   }
 
   private async handlePermissionUpdated(event: OpenCodeEvent): Promise<void> {
+    if (!getConfig().notifications.permission) return;
+
     const perm = event.properties as {
       sessionID: string;
       id: string;

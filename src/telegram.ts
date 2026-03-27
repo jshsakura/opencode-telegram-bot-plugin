@@ -53,10 +53,16 @@ export class TelegramBridge {
 
   async start(): Promise<void> {
     if (this.polling) return;
-    
+
+    const config = getConfig();
+    if (!config.polling.enabled) {
+      console.log('[opencode-telegram-bot] Polling disabled (send-only mode). Set OPENCODE_TELEGRAM_POLLING_ENABLED=true to enable.');
+      return;
+    }
+
     this.polling = true;
     this.isPollingOwner = this.acquirePollLock();
-    
+
     if (this.isPollingOwner) {
         console.log('[opencode-telegram-bot] Bot polling started (this instance owns the poll lock)');
       this.pollLoop();
@@ -136,6 +142,7 @@ export class TelegramBridge {
         const updates = await this.apiCall<TelegramUpdate[]>('getUpdates', {
           offset: this.pollOffset,
           timeout: 30,
+          allowed_updates: ['callback_query'],
         });
         
         backoff = INITIAL_BACKOFF_MS;
@@ -277,11 +284,12 @@ export class TelegramBridge {
     title: string,
     metadata: Record<string, unknown>
   ): Promise<void> {
-    const lang = getConfig().language;
+    const config = getConfig();
+    const lang = config.language;
     const lines = [
       `<b>${t('permission.title', lang)}</b>`,
     ];
-    
+
     lines.push(`<i>${t('permission.action', lang)}:</i>`);
     lines.push(`  ${escapeHtml(title)}`);
 
@@ -294,20 +302,25 @@ export class TelegramBridge {
       lines.push(`  <code>${escapeHtml(String(metadata['path']))}</code>`);
     }
 
-    this.cleanupPendingPermissions();
-    const key = this.nextCallbackKey++;
-    this.pendingPermissions.set(key, { sessionID, permissionID, createdAt: Date.now() });
+    if (config.polling.enabled) {
+      this.cleanupPendingPermissions();
+      const key = this.nextCallbackKey++;
+      this.pendingPermissions.set(key, { sessionID, permissionID, createdAt: Date.now() });
 
-    // callback_data format: "p:<key>:<response>"
-    const keyboard: InlineKeyboardButton[][] = [
-      [
-        { text: t('permission.allow', lang), callback_data: `p:${key}:once` },
-        { text: t('permission.always', lang), callback_data: `p:${key}:always` },
-        { text: t('permission.reject', lang), callback_data: `p:${key}:reject` },
-      ],
-    ];
+      const keyboard: InlineKeyboardButton[][] = [
+        [
+          { text: t('permission.allow', lang), callback_data: `p:${key}:once` },
+          { text: t('permission.always', lang), callback_data: `p:${key}:always` },
+          { text: t('permission.reject', lang), callback_data: `p:${key}:reject` },
+        ],
+      ];
 
-    await this.sendMessage(lines.join('\n'), keyboard, true);
+      await this.sendMessage(lines.join('\n'), keyboard, true);
+    } else {
+      lines.push('');
+      lines.push(`<i>${t('permission.respond_in_app', lang)}</i>`);
+      await this.sendMessage(lines.join('\n'), undefined, true);
+    }
   }
 
   async sendTodosComplete(_sessionID: string, todos: Array<{ content: string }>): Promise<void> {

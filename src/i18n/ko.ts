@@ -29,6 +29,7 @@ export const ko = {
     always: "✅ 항상 승인합니다",
     reject: "❌ 거부합니다",
     waiting_for_approval: "승인을 기다리고 있습니다...",
+    respond_in_app: "💡 OpenCode에서 응답해 주세요",
   },
   todos: {
     title: "📋 작업 진행 현황",

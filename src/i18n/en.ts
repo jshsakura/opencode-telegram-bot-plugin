@@ -29,6 +29,7 @@ export const en = {
     always: "✅ Always Approve",
     reject: "❌ Reject",
     waiting_for_approval: "Waiting for approval...",
+    respond_in_app: "💡 Please respond in OpenCode",
   },
   todos: {
     title: "📋 Task Progress",

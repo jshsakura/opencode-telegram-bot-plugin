@@ -45,9 +45,11 @@ After updating, restart OpenCode.
 ### 3. Set Environment Variables
 
 ```bash
-export TELEGRAM_BOT_TOKEN="your-bot-token"
-export TELEGRAM_CHAT_ID="your-chat-id"
+export OPENCODE_TELEGRAM_BOT_TOKEN="your-bot-token"
+export OPENCODE_TELEGRAM_CHAT_ID="your-chat-id"
 ```
+
+> **Note:** This plugin uses the `OPENCODE_TELEGRAM_` prefix to avoid conflicts with other Telegram plugins (e.g. Claude Code's `TELEGRAM_BOT_TOKEN`).
 
 ### 4. Add to OpenCode Global Config
 
@@ -71,17 +73,17 @@ opencode
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `TELEGRAM_BOT_TOKEN` | Your Telegram bot token (required) | - |
-| `TELEGRAM_CHAT_ID` | Your Telegram chat ID (required) | - |
-| `TELEGRAM_LANGUAGE` | Language for notifications (`ko` or `en`) | `ko` |
-| `TELEGRAM_NOTIFY_SESSION` | Session idle notifications | `true` |
-| `TELEGRAM_NOTIFY_PERMISSION` | Permission request notifications | `true` |
-| `TELEGRAM_NOTIFY_TODO` | Todo completion notifications | `true` |
-| `TELEGRAM_NOTIFY_SUBTASK` | Subtask start notifications | `true` |
-| `TELEGRAM_NOTIFY_ERROR` | Error notifications | `true` |
-| `TELEGRAM_NOTIFY_FILE_LIST` | Expandable file list in session summary | `true` |
-| `TELEGRAM_DEDUP_ENABLED` | Enable duplicate notification filtering | `true` |
-| `TELEGRAM_DEDUP_TTL_MS` | Deduplication TTL in milliseconds | `300000` (5 min) |
+| `OPENCODE_TELEGRAM_BOT_TOKEN` | Your Telegram bot token (required) | - |
+| `OPENCODE_TELEGRAM_CHAT_ID` | Your Telegram chat ID (required) | - |
+| `OPENCODE_TELEGRAM_LANGUAGE` | Language for notifications (`ko` or `en`) | `ko` |
+| `OPENCODE_TELEGRAM_NOTIFY_SESSION` | Session idle notifications | `true` |
+| `OPENCODE_TELEGRAM_NOTIFY_PERMISSION` | Permission request notifications | `true` |
+| `OPENCODE_TELEGRAM_NOTIFY_TODO` | Todo completion notifications | `true` |
+| `OPENCODE_TELEGRAM_NOTIFY_SUBTASK` | Subtask start notifications | `true` |
+| `OPENCODE_TELEGRAM_NOTIFY_ERROR` | Error notifications | `true` |
+| `OPENCODE_TELEGRAM_NOTIFY_FILE_LIST` | Expandable file list in session summary | `true` |
+| `OPENCODE_TELEGRAM_DEDUP_ENABLED` | Enable duplicate notification filtering | `true` |
+| `OPENCODE_TELEGRAM_DEDUP_TTL_MS` | Deduplication TTL in milliseconds | `300000` (5 min) |
 
 ## Noise Filtering (v1.1.0+)
 
@@ -115,11 +117,11 @@ No extra LLM calls or API requests — uses already-received todo event data.
 Control which notifications you receive:
 
 ```bash
-export TELEGRAM_NOTIFY_SESSION="false"     # Disable session idle
-export TELEGRAM_NOTIFY_FILE_LIST="false"   # Disable file list
-export TELEGRAM_NOTIFY_TODO="false"        # Disable todo summaries
-export TELEGRAM_NOTIFY_SUBTASK="false"     # Disable subtask notifications
-export TELEGRAM_NOTIFY_ERROR="false"       # Disable errors (not recommended)
+export OPENCODE_TELEGRAM_NOTIFY_SESSION="false"     # Disable session idle
+export OPENCODE_TELEGRAM_NOTIFY_FILE_LIST="false"   # Disable file list
+export OPENCODE_TELEGRAM_NOTIFY_TODO="false"        # Disable todo summaries
+export OPENCODE_TELEGRAM_NOTIFY_SUBTASK="false"     # Disable subtask notifications
+export OPENCODE_TELEGRAM_NOTIFY_ERROR="false"       # Disable errors (not recommended)
 ```
 
 Permission notifications cannot be disabled as they require your response.
@@ -129,8 +131,8 @@ Permission notifications cannot be disabled as they require your response.
 Prevents duplicate notifications within a time window:
 
 ```bash
-export TELEGRAM_DEDUP_ENABLED="true"
-export TELEGRAM_DEDUP_TTL_MS="600000"   # 10 minutes
+export OPENCODE_TELEGRAM_DEDUP_ENABLED="true"
+export OPENCODE_TELEGRAM_DEDUP_TTL_MS="600000"   # 10 minutes
 ```
 
 ## Notification Reference

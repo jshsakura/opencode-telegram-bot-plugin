@@ -17,12 +17,12 @@ function makePermissionEvent() {
 
 afterEach(() => {
   clearConfigCache();
-  delete process.env['TELEGRAM_NOTIFY_PERMISSION'];
+  delete process.env['OPENCODE_TELEGRAM_NOTIFY_PERMISSION'];
 });
 
 describe('EventRouter permission notification toggle', () => {
-  it('does not send permission message when TELEGRAM_NOTIFY_PERMISSION=false', async () => {
-    process.env['TELEGRAM_NOTIFY_PERMISSION'] = 'false';
+  it('does not send permission message when OPENCODE_TELEGRAM_NOTIFY_PERMISSION=false', async () => {
+    process.env['OPENCODE_TELEGRAM_NOTIFY_PERMISSION'] = 'false';
 
     const sendPermissionRequest = vi.fn(async () => {});
     const telegram = { sendPermissionRequest } as unknown as TelegramBridge;
@@ -34,8 +34,8 @@ describe('EventRouter permission notification toggle', () => {
     expect(sendPermissionRequest).not.toHaveBeenCalled();
   });
 
-  it('sends permission message when TELEGRAM_NOTIFY_PERMISSION=true', async () => {
-    process.env['TELEGRAM_NOTIFY_PERMISSION'] = 'true';
+  it('sends permission message when OPENCODE_TELEGRAM_NOTIFY_PERMISSION=true', async () => {
+    process.env['OPENCODE_TELEGRAM_NOTIFY_PERMISSION'] = 'true';
 
     const sendPermissionRequest = vi.fn(async () => {});
     const telegram = { sendPermissionRequest } as unknown as TelegramBridge;

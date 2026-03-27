@@ -34,6 +34,7 @@ export interface TranslationMessages {
     always: string;
     reject: string;
     waiting_for_approval: string;
+    respond_in_app: string;
   };
   todos: {
     title: string;

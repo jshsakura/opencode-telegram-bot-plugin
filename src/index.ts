@@ -17,12 +17,12 @@ interface PluginResult {
 }
 
 const OpencodeTelegram = async (ctx: PluginContext): Promise<PluginResult> => {
-  const botToken = process.env['TELEGRAM_BOT_TOKEN'];
-  const chatId = process.env['TELEGRAM_CHAT_ID'];
+  const botToken = process.env['OPENCODE_TELEGRAM_BOT_TOKEN'];
+  const chatId = process.env['OPENCODE_TELEGRAM_CHAT_ID'];
 
   if (!botToken || !chatId) {
     console.warn(
-        '[opencode-telegram-bot] Missing TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID environment variables. Plugin disabled.'
+        '[opencode-telegram-bot] Missing OPENCODE_TELEGRAM_BOT_TOKEN or OPENCODE_TELEGRAM_CHAT_ID environment variables. Plugin disabled.'
     );
     return {};
   }
@@ -47,14 +47,15 @@ const OpencodeTelegram = async (ctx: PluginContext): Promise<PluginResult> => {
 
   await telegram.start();
 
-  const cleanup = () => telegram.stop();
-  process.on('SIGINT', cleanup);
-  process.on('SIGTERM', cleanup);
-  process.on('exit', cleanup);
-
   return {
     async event({ event }) {
-      await router.handleEvent(event);
+      // Fire-and-forget: don't block the host's event pipeline
+      router.handleEvent(event).catch((err) => {
+        console.error(
+          '[opencode-telegram-bot] Event handler error:',
+          err instanceof Error ? err.message : err
+        );
+      });
     },
   };
 };

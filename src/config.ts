@@ -30,6 +30,9 @@ export interface TelegramPluginConfig {
     intervalMs: number;
     maxBatchSize: number;
   };
+  polling: {
+    enabled: boolean;
+  };
 }
 
 const DEFAULT_CONFIG: TelegramPluginConfig = {
@@ -59,6 +62,9 @@ const DEFAULT_CONFIG: TelegramPluginConfig = {
     enabled: true,
     intervalMs: 5000,
     maxBatchSize: 10,
+  },
+  polling: {
+    enabled: false,
   },
 };
 
@@ -91,32 +97,35 @@ export function getConfig(): TelegramPluginConfig {
   }
 
   const config: TelegramPluginConfig = {
-    language: parseLanguage(process.env['TELEGRAM_LANGUAGE']),
+    language: parseLanguage(process.env['OPENCODE_TELEGRAM_LANGUAGE']),
     notifications: {
-      session: parseBoolean(process.env['TELEGRAM_NOTIFY_SESSION'], DEFAULT_CONFIG.notifications.session),
-      permission: parseBoolean(process.env['TELEGRAM_NOTIFY_PERMISSION'], DEFAULT_CONFIG.notifications.permission),
-      todo: parseBoolean(process.env['TELEGRAM_NOTIFY_TODO'], DEFAULT_CONFIG.notifications.todo),
-      subtask: parseBoolean(process.env['TELEGRAM_NOTIFY_SUBTASK'], DEFAULT_CONFIG.notifications.subtask),
-      error: parseBoolean(process.env['TELEGRAM_NOTIFY_ERROR'], DEFAULT_CONFIG.notifications.error),
-      fileList: parseBoolean(process.env['TELEGRAM_NOTIFY_FILE_LIST'], DEFAULT_CONFIG.notifications.fileList),
+      session: parseBoolean(process.env['OPENCODE_TELEGRAM_NOTIFY_SESSION'], DEFAULT_CONFIG.notifications.session),
+      permission: parseBoolean(process.env['OPENCODE_TELEGRAM_NOTIFY_PERMISSION'], DEFAULT_CONFIG.notifications.permission),
+      todo: parseBoolean(process.env['OPENCODE_TELEGRAM_NOTIFY_TODO'], DEFAULT_CONFIG.notifications.todo),
+      subtask: parseBoolean(process.env['OPENCODE_TELEGRAM_NOTIFY_SUBTASK'], DEFAULT_CONFIG.notifications.subtask),
+      error: parseBoolean(process.env['OPENCODE_TELEGRAM_NOTIFY_ERROR'], DEFAULT_CONFIG.notifications.error),
+      fileList: parseBoolean(process.env['OPENCODE_TELEGRAM_NOTIFY_FILE_LIST'], DEFAULT_CONFIG.notifications.fileList),
     },
     dedup: {
-      enabled: parseBoolean(process.env['TELEGRAM_DEDUP_ENABLED'], DEFAULT_CONFIG.dedup.enabled),
-      ttlMs: parseNumber(process.env['TELEGRAM_DEDUP_TTL_MS'], DEFAULT_CONFIG.dedup.ttlMs),
+      enabled: parseBoolean(process.env['OPENCODE_TELEGRAM_DEDUP_ENABLED'], DEFAULT_CONFIG.dedup.enabled),
+      ttlMs: parseNumber(process.env['OPENCODE_TELEGRAM_DEDUP_TTL_MS'], DEFAULT_CONFIG.dedup.ttlMs),
     },
     rateLimit: {
-      enabled: parseBoolean(process.env['TELEGRAM_RATE_LIMIT_ENABLED'], DEFAULT_CONFIG.rateLimit.enabled),
-      minIntervalMs: parseNumber(process.env['TELEGRAM_RATE_LIMIT_INTERVAL_MS'], DEFAULT_CONFIG.rateLimit.minIntervalMs),
+      enabled: parseBoolean(process.env['OPENCODE_TELEGRAM_RATE_LIMIT_ENABLED'], DEFAULT_CONFIG.rateLimit.enabled),
+      minIntervalMs: parseNumber(process.env['OPENCODE_TELEGRAM_RATE_LIMIT_INTERVAL_MS'], DEFAULT_CONFIG.rateLimit.minIntervalMs),
     },
     message: {
-      maxLength: parseNumber(process.env['TELEGRAM_MESSAGE_MAX_LENGTH'], DEFAULT_CONFIG.message.maxLength),
-      truncateSuffix: process.env['TELEGRAM_MESSAGE_TRUNCATE_SUFFIX'] ?? DEFAULT_CONFIG.message.truncateSuffix,
-      compactWhitespace: parseBoolean(process.env['TELEGRAM_MESSAGE_COMPACT_WHITESPACE'], DEFAULT_CONFIG.message.compactWhitespace),
+      maxLength: parseNumber(process.env['OPENCODE_TELEGRAM_MESSAGE_MAX_LENGTH'], DEFAULT_CONFIG.message.maxLength),
+      truncateSuffix: process.env['OPENCODE_TELEGRAM_MESSAGE_TRUNCATE_SUFFIX'] ?? DEFAULT_CONFIG.message.truncateSuffix,
+      compactWhitespace: parseBoolean(process.env['OPENCODE_TELEGRAM_MESSAGE_COMPACT_WHITESPACE'], DEFAULT_CONFIG.message.compactWhitespace),
     },
     batch: {
-      enabled: parseBoolean(process.env['TELEGRAM_BATCH_ENABLED'], DEFAULT_CONFIG.batch.enabled),
-      intervalMs: parseNumber(process.env['TELEGRAM_BATCH_INTERVAL_MS'], DEFAULT_CONFIG.batch.intervalMs),
-      maxBatchSize: parseNumber(process.env['TELEGRAM_BATCH_MAX_SIZE'], DEFAULT_CONFIG.batch.maxBatchSize),
+      enabled: parseBoolean(process.env['OPENCODE_TELEGRAM_BATCH_ENABLED'], DEFAULT_CONFIG.batch.enabled),
+      intervalMs: parseNumber(process.env['OPENCODE_TELEGRAM_BATCH_INTERVAL_MS'], DEFAULT_CONFIG.batch.intervalMs),
+      maxBatchSize: parseNumber(process.env['OPENCODE_TELEGRAM_BATCH_MAX_SIZE'], DEFAULT_CONFIG.batch.maxBatchSize),
+    },
+    polling: {
+      enabled: parseBoolean(process.env['OPENCODE_TELEGRAM_POLLING_ENABLED'], DEFAULT_CONFIG.polling.enabled),
     },
   };
 

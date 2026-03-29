@@ -6,6 +6,9 @@ import os from 'node:os';
 export const DEFAULT_TTL_MS = 300000;
 
 const STORAGE_PATH = path.join(os.tmpdir(), 'opencode-telegram-bot-dedup.json');
+const LOCK_PATH = path.join(os.tmpdir(), 'opencode-telegram-bot-dedup.lock');
+const LOCK_RETRY_MS = 10;
+const LOCK_TIMEOUT_MS = 1000;
 
 interface HashEntry {
   timestamp: number;
@@ -37,6 +40,38 @@ function writeStorage(storage: Storage): void {
   } catch {}
 }
 
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function withStorageLock<T>(fn: () => T | Promise<T>): Promise<T> {
+  const startedAt = Date.now();
+
+  while (true) {
+    let fd: number | null = null;
+
+    try {
+      fd = fs.openSync(LOCK_PATH, 'wx');
+      return await fn();
+    } catch {
+      if (Date.now() - startedAt >= LOCK_TIMEOUT_MS) {
+        return await fn();
+      }
+      await sleep(LOCK_RETRY_MS);
+    } finally {
+      if (fd !== null) {
+        try {
+          fs.closeSync(fd);
+        } catch {}
+
+        try {
+          fs.unlinkSync(LOCK_PATH);
+        } catch {}
+      }
+    }
+  }
+}
+
 function cleanupExpired(storage: Storage, now: number, ttlMs: number): Storage {
   const cleaned: Storage = {};
   for (const [hash, entry] of Object.entries(storage)) {
@@ -54,18 +89,20 @@ function cleanupExpired(storage: Storage, now: number, ttlMs: number): Storage {
  */
 export async function checkAndStore(message: string, ttlMs: number = DEFAULT_TTL_MS): Promise<boolean> {
   try {
-    const now = Date.now();
-    const messageHash = hashMessage(message);
-    let storage = readStorage();
-    storage = cleanupExpired(storage, now, ttlMs);
-    
-    if (storage[messageHash]) {
-      return false;
-    }
-    
-    storage[messageHash] = { timestamp: now };
-    writeStorage(storage);
-    return true;
+    return await withStorageLock(() => {
+      const now = Date.now();
+      const messageHash = hashMessage(message);
+      let storage = readStorage();
+      storage = cleanupExpired(storage, now, ttlMs);
+
+      if (storage[messageHash]) {
+        return false;
+      }
+
+      storage[messageHash] = { timestamp: now };
+      writeStorage(storage);
+      return true;
+    });
   } catch {
     return true;
   }

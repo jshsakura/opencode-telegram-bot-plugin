@@ -18,6 +18,8 @@ function makePermissionEvent() {
 afterEach(() => {
   clearConfigCache();
   delete process.env['OPENCODE_TELEGRAM_NOTIFY_PERMISSION'];
+  delete process.env['OPENCODE_TELEGRAM_NOTIFY_SESSION'];
+  vi.useRealTimers();
 });
 
 describe('EventRouter permission notification toggle', () => {
@@ -45,5 +47,97 @@ describe('EventRouter permission notification toggle', () => {
     clearInterval((router as unknown as { evictTimer: NodeJS.Timeout }).evictTimer);
 
     expect(sendPermissionRequest).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('EventRouter idle notification deduping', () => {
+  it('sends only one idle notification during the same idle cycle', async () => {
+    vi.useFakeTimers();
+    process.env['OPENCODE_TELEGRAM_NOTIFY_SESSION'] = 'true';
+
+    const sendSessionIdle = vi.fn(async () => {});
+    const telegram = { sendSessionIdle } as unknown as TelegramBridge;
+    const router = new EventRouter(telegram);
+
+    await router.handleEvent({
+      type: 'session.created',
+      properties: { info: { id: 's1', title: 'Main Session' } },
+    });
+
+    await router.handleEvent({
+      type: 'session.status',
+      properties: { sessionID: 's1', status: { type: 'busy' } },
+    });
+
+    await router.handleEvent({
+      type: 'session.status',
+      properties: { sessionID: 's1', status: { type: 'idle' } },
+    });
+
+    await router.handleEvent({
+      type: 'session.idle',
+      properties: { sessionID: 's1' },
+    });
+
+    await vi.advanceTimersByTimeAsync(15_000);
+    expect(sendSessionIdle).toHaveBeenCalledTimes(1);
+
+    await router.handleEvent({
+      type: 'session.idle',
+      properties: { sessionID: 's1' },
+    });
+
+    await vi.advanceTimersByTimeAsync(15_000);
+    expect(sendSessionIdle).toHaveBeenCalledTimes(1);
+
+    clearInterval((router as unknown as { evictTimer: NodeJS.Timeout }).evictTimer);
+  });
+
+  it('allows a new idle notification after the session becomes busy again', async () => {
+    vi.useFakeTimers();
+    process.env['OPENCODE_TELEGRAM_NOTIFY_SESSION'] = 'true';
+
+    const sendSessionIdle = vi.fn(async () => {});
+    const telegram = { sendSessionIdle } as unknown as TelegramBridge;
+    const router = new EventRouter(telegram);
+
+    await router.handleEvent({
+      type: 'session.created',
+      properties: { info: { id: 's1', title: 'Main Session' } },
+    });
+
+    await router.handleEvent({
+      type: 'session.status',
+      properties: { sessionID: 's1', status: { type: 'busy' } },
+    });
+    await router.handleEvent({
+      type: 'session.status',
+      properties: { sessionID: 's1', status: { type: 'idle' } },
+    });
+    await router.handleEvent({
+      type: 'session.idle',
+      properties: { sessionID: 's1' },
+    });
+
+    await vi.advanceTimersByTimeAsync(15_000);
+    expect(sendSessionIdle).toHaveBeenCalledTimes(1);
+
+    await router.handleEvent({
+      type: 'session.status',
+      properties: { sessionID: 's1', status: { type: 'busy' } },
+    });
+    await router.handleEvent({
+      type: 'session.status',
+      properties: { sessionID: 's1', status: { type: 'idle' } },
+    });
+    await router.handleEvent({
+      type: 'session.idle',
+      properties: { sessionID: 's1' },
+    });
+
+    await vi.advanceTimersByTimeAsync(15_000);
+    expect(sendSessionIdle).toHaveBeenCalledTimes(2);
+
+    clearInterval((router as unknown as { evictTimer: NodeJS.Timeout }).evictTimer);
   });
 });

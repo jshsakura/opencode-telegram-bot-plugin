@@ -13,6 +13,7 @@ export class EventRouter {
   private sessionDiffs = new Map<string, FileDiff[]>();
   private sessionTodoPending = new Map<string, boolean>(); // true = has unfinished todos
   private idleDebounceTimers = new Map<string, NodeJS.Timeout>(); // debounce idle notifs
+  private idleNotificationSent = new Map<string, boolean>();
   private evictTimer: NodeJS.Timeout;
 
   private static readonly IDLE_DEBOUNCE_MS = 15_000; // 15s — survives system-reminder cycles
@@ -32,6 +33,7 @@ export class EventRouter {
         this.sessionSummaries.delete(id);
         this.sessionDiffs.delete(id);
         this.sessionTodoPending.delete(id);
+        this.idleNotificationSent.delete(id);
         const t = this.idleDebounceTimers.get(id);
         if (t) { clearTimeout(t); this.idleDebounceTimers.delete(id); }
       }
@@ -114,6 +116,7 @@ export class EventRouter {
       // Cancel any pending idle notification — session is active again
       const existing = this.idleDebounceTimers.get(sessionID);
       if (existing) { clearTimeout(existing); this.idleDebounceTimers.delete(sessionID); }
+      this.idleNotificationSent.set(sessionID, false);
       this.sessionStates.set(sessionID, {
         ...prev,
         status: 'busy',
@@ -127,6 +130,7 @@ export class EventRouter {
         lastSeenAt: now,
       });
     } else if (status.type === 'retry') {
+      this.idleNotificationSent.set(sessionID, false);
       this.sessionStates.set(sessionID, {
         ...prev,
         status: 'retry',
@@ -142,6 +146,7 @@ export class EventRouter {
     const state = this.sessionStates.get(sessionID);
 
     if (!state || state.status !== 'idle') return;
+    if (this.idleNotificationSent.get(sessionID)) return;
 
     const title = this.sessionTitles.get(sessionID) || sessionID;
     if (this.isNoiseSession(sessionID, title)) return;
@@ -155,6 +160,7 @@ export class EventRouter {
       // Re-check status — if it went busy again, skip
       const current = this.sessionStates.get(sessionID);
       if (!current || current.status !== 'idle') return;
+      if (this.idleNotificationSent.get(sessionID)) return;
 
       const summary = this.sessionSummaries.get(sessionID);
       const waitingForUser = this.sessionTodoPending.get(sessionID) === true;
@@ -163,6 +169,7 @@ export class EventRouter {
         : undefined;
 
       await this.telegram.sendSessionIdle(title, sessionID, summary, diffs, waitingForUser);
+      this.idleNotificationSent.set(sessionID, true);
     }, EventRouter.IDLE_DEBOUNCE_MS);
 
     timer.unref();

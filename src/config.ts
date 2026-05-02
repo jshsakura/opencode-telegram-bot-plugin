@@ -11,6 +11,7 @@ export interface TelegramPluginConfig {
     subtask: boolean;
     error: boolean;
     fileList: boolean;
+    idleMinBusyMs: number;
   };
   dedup: {
     enabled: boolean;
@@ -44,6 +45,7 @@ const DEFAULT_CONFIG: TelegramPluginConfig = {
     subtask: false,
     error: true,
     fileList: false,
+    idleMinBusyMs: 60_000, // only notify on idle if busy lasted at least this long
   },
   dedup: {
     enabled: true,
@@ -91,6 +93,13 @@ function parseNumber(value: string | undefined, defaultValue: number): number {
   return parsed;
 }
 
+function parseNonNegativeNumber(value: string | undefined, defaultValue: number): number {
+  if (value === undefined) return defaultValue;
+  const parsed = parseInt(value, 10);
+  if (isNaN(parsed) || parsed < 0) return defaultValue;
+  return parsed;
+}
+
 export function getConfig(): TelegramPluginConfig {
   if (cachedConfig !== null) {
     return cachedConfig;
@@ -105,6 +114,7 @@ export function getConfig(): TelegramPluginConfig {
       subtask: parseBoolean(process.env['OPENCODE_TELEGRAM_NOTIFY_SUBTASK'], DEFAULT_CONFIG.notifications.subtask),
       error: parseBoolean(process.env['OPENCODE_TELEGRAM_NOTIFY_ERROR'], DEFAULT_CONFIG.notifications.error),
       fileList: parseBoolean(process.env['OPENCODE_TELEGRAM_NOTIFY_FILE_LIST'], DEFAULT_CONFIG.notifications.fileList),
+      idleMinBusyMs: parseNonNegativeNumber(process.env['OPENCODE_TELEGRAM_IDLE_MIN_BUSY_MS'], DEFAULT_CONFIG.notifications.idleMinBusyMs),
     },
     dedup: {
       enabled: parseBoolean(process.env['OPENCODE_TELEGRAM_DEDUP_ENABLED'], DEFAULT_CONFIG.dedup.enabled),

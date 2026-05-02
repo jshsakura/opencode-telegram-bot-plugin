@@ -14,10 +14,11 @@ export class EventRouter {
   private sessionTodoPending = new Map<string, boolean>(); // true = has unfinished todos
   private idleDebounceTimers = new Map<string, NodeJS.Timeout>(); // debounce idle notifs
   private idleNotificationSent = new Map<string, boolean>();
-  private lastIdleNotificationKeys = new Map<string, string>();
+  private lastIdleNotificationAt = new Map<string, number>();
   private evictTimer: NodeJS.Timeout;
 
   private static readonly IDLE_DEBOUNCE_MS = 15_000; // 15s — survives system-reminder cycles
+  private static readonly IDLE_COOLDOWN_MS = 5 * 60 * 1000; // hard floor between idle notifs per session
 
   constructor(telegram: TelegramBridge) {
     this.telegram = telegram;
@@ -35,33 +36,11 @@ export class EventRouter {
         this.sessionDiffs.delete(id);
         this.sessionTodoPending.delete(id);
         this.idleNotificationSent.delete(id);
-        this.lastIdleNotificationKeys.delete(id);
+        this.lastIdleNotificationAt.delete(id);
         const t = this.idleDebounceTimers.get(id);
         if (t) { clearTimeout(t); this.idleDebounceTimers.delete(id); }
       }
     }
-  }
-
-  private buildIdleNotificationKey(
-    sessionID: string,
-    title: string,
-    summary?: SessionSummary,
-    diffs?: FileDiff[],
-    waitingForUser = false,
-  ): string {
-    return JSON.stringify({
-      sessionID,
-      title,
-      waitingForUser,
-      additions: summary?.additions ?? 0,
-      deletions: summary?.deletions ?? 0,
-      filesChanged: summary?.files ?? 0,
-      files: diffs?.map((diff) => ({
-        file: diff.file,
-        additions: diff.additions,
-        deletions: diff.deletions,
-      })) ?? [],
-    });
   }
 
   async handleEvent(event: OpenCodeEvent): Promise<void> {
@@ -186,24 +165,33 @@ export class EventRouter {
       if (!current || current.status !== 'idle') return;
       if (this.idleNotificationSent.get(sessionID)) return;
 
-      const summary = this.sessionSummaries.get(sessionID);
+      const now = Date.now();
+      const lastAt = this.lastIdleNotificationAt.get(sessionID) ?? 0;
+      if (lastAt > 0 && now - lastAt < EventRouter.IDLE_COOLDOWN_MS) {
+        // Per-session hard cooldown — suppress regardless of payload churn
+        this.idleNotificationSent.set(sessionID, true);
+        return;
+      }
+
+      // Only notify when the busy phase that just ended was meaningful (long-running).
+      const minBusyMs = getConfig().notifications.idleMinBusyMs;
+      if (minBusyMs > 0) {
+        const busyStartedAt = current.lastBusyAt;
+        if (!busyStartedAt || now - busyStartedAt < minBusyMs) {
+          this.idleNotificationSent.set(sessionID, true);
+          return;
+        }
+      }
+
       const waitingForUser = this.sessionTodoPending.get(sessionID) === true;
+      const summary = this.sessionSummaries.get(sessionID);
       const diffs = getConfig().notifications.fileList
         ? this.sessionDiffs.get(sessionID)
         : undefined;
-      const notificationKey = this.buildIdleNotificationKey(
-        sessionID,
-        title,
-        summary,
-        diffs,
-        waitingForUser,
-      );
-
-      if (this.lastIdleNotificationKeys.get(sessionID) === notificationKey) return;
 
       await this.telegram.sendSessionIdle(title, sessionID, summary, diffs, waitingForUser);
       this.idleNotificationSent.set(sessionID, true);
-      this.lastIdleNotificationKeys.set(sessionID, notificationKey);
+      this.lastIdleNotificationAt.set(sessionID, now);
     }, EventRouter.IDLE_DEBOUNCE_MS);
 
     timer.unref();

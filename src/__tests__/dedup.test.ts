@@ -5,14 +5,23 @@ import path from 'node:path';
 import os from 'node:os';
 
 const STORAGE_PATH = path.join(os.tmpdir(), 'opencode-telegram-bot-dedup.json');
+const LOCK_PATH = path.join(os.tmpdir(), 'opencode-telegram-bot-dedup.lock');
+
+function removeLockFile(): void {
+  try {
+    fs.unlinkSync(LOCK_PATH);
+  } catch {}
+}
 
 describe('dedup', () => {
   beforeEach(() => {
     clear();
+    removeLockFile();
   });
 
   afterEach(() => {
     clear();
+    removeLockFile();
   });
 
   describe('DEFAULT_TTL_MS', () => {
@@ -98,6 +107,23 @@ describe('dedup', () => {
       expect(result).toBe(true);
       
       vi.restoreAllMocks();
+    });
+  });
+
+  describe('stale lock recovery', () => {
+    it('reclaims a stale lock left by a crashed process and dedupes correctly', async () => {
+      // Simulate a crashed process that left the lock file behind, with an mtime
+      // older than LOCK_STALE_MS (3s).
+      fs.writeFileSync(LOCK_PATH, '0', 'utf-8');
+      const oldTime = new Date(Date.now() - 60_000);
+      fs.utimesSync(LOCK_PATH, oldTime, oldTime);
+
+      const first = await checkAndStore('hello');
+      const second = await checkAndStore('hello');
+
+      expect(first).toBe(true);
+      expect(second).toBe(false);
+      expect(fs.existsSync(LOCK_PATH)).toBe(false);
     });
   });
 

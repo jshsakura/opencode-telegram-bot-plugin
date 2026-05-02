@@ -8,7 +8,8 @@ export const DEFAULT_TTL_MS = 300000;
 const STORAGE_PATH = path.join(os.tmpdir(), 'opencode-telegram-bot-dedup.json');
 const LOCK_PATH = path.join(os.tmpdir(), 'opencode-telegram-bot-dedup.lock');
 const LOCK_RETRY_MS = 10;
-const LOCK_TIMEOUT_MS = 1000;
+const LOCK_TIMEOUT_MS = 2000;
+const LOCK_STALE_MS = 3000;
 
 interface HashEntry {
   timestamp: number;
@@ -44,6 +45,21 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+function tryReclaimStaleLock(): boolean {
+  try {
+    const stat = fs.statSync(LOCK_PATH);
+    if (Date.now() - stat.mtimeMs > LOCK_STALE_MS) {
+      try {
+        fs.unlinkSync(LOCK_PATH);
+      } catch {}
+      return true;
+    }
+  } catch {
+    return true;
+  }
+  return false;
+}
+
 async function withStorageLock<T>(fn: () => T | Promise<T>): Promise<T> {
   const startedAt = Date.now();
 
@@ -54,7 +70,13 @@ async function withStorageLock<T>(fn: () => T | Promise<T>): Promise<T> {
       fd = fs.openSync(LOCK_PATH, 'wx');
       return await fn();
     } catch {
+      if (tryReclaimStaleLock()) {
+        continue;
+      }
       if (Date.now() - startedAt >= LOCK_TIMEOUT_MS) {
+        try {
+          fs.unlinkSync(LOCK_PATH);
+        } catch {}
         return await fn();
       }
       await sleep(LOCK_RETRY_MS);

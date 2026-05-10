@@ -148,25 +148,6 @@ export OPENCODE_TELEGRAM_DEDUP_TTL_MS="600000"   # 10 minutes
 | All todos done | 📋 All Tasks Complete |
 | Error occurred | ❌ Error (real errors only) |
 
-## Companion Plugins
-
-`opencode-telegram-bot-plugin` handles notifications and remote control. Use task-resolution plugins alongside it for a complete setup.
-
-Recommended companion:
-
-- [`opencode-resolve`](https://github.com/jshsakura/opencode-resolve): Lightweight agent injection with native `plan`/`build` preservation for OpenCode sessions.
-
-Example:
-
-```json
-{
-  "plugin": [
-    "opencode-resolve",
-    "opencode-telegram-bot-plugin"
-  ]
-}
-```
-
 ## License
 
 MIT

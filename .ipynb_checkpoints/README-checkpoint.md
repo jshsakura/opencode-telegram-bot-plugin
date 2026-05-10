@@ -1,4 +1,4 @@
-# @jshsakura/opencode-telegram-bot-plugin
+# opencode-telegram-bot-plugin
 
 [OpenCode](https://opencode.ai) plugin that sends Telegram notifications when tasks complete, and lets you respond to permission requests directly from your phone.
 
@@ -13,7 +13,7 @@
 ## Installation
 
 ```bash
-npm install @jshsakura/opencode-telegram-bot-plugin
+npm install opencode-telegram-bot-plugin
 ```
 
 ## Setup
@@ -44,7 +44,7 @@ Add to `~/.config/opencode/opencode.json`:
 ```json
 {
   "plugin": [
-    "@jshsakura/opencode-telegram-bot-plugin"
+    "opencode-telegram-bot-plugin"
   ]
 }
 ```

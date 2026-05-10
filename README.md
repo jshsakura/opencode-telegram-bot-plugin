@@ -1,4 +1,7 @@
-# @jshsakura/opencode-telegram-bot-plugin
+# opencode-telegram-bot-plugin
+
+[![npm version](https://img.shields.io/npm/v/opencode-telegram-bot-plugin.svg)](https://www.npmjs.com/package/opencode-telegram-bot-plugin)
+[![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 
 [OpenCode](https://opencode.ai) plugin that sends smart Telegram notifications — only what matters, beautifully formatted.
 
@@ -17,13 +20,13 @@
 ## Installation
 
 ```bash
-npm install -g @jshsakura/opencode-telegram-bot-plugin
+npm install -g opencode-telegram-bot-plugin
 ```
 
 ## Update
 
 ```bash
-npm update -g @jshsakura/opencode-telegram-bot-plugin
+npm update -g opencode-telegram-bot-plugin
 ```
 
 After updating, restart OpenCode.
@@ -58,7 +61,7 @@ Add to `~/.config/opencode/opencode.json`:
 ```json
 {
   "plugin": [
-    "@jshsakura/opencode-telegram-bot-plugin"
+    "opencode-telegram-bot-plugin"
   ]
 }
 ```
@@ -85,25 +88,25 @@ opencode
 | `OPENCODE_TELEGRAM_DEDUP_ENABLED` | Enable duplicate notification filtering | `true` |
 | `OPENCODE_TELEGRAM_DEDUP_TTL_MS` | Deduplication TTL in milliseconds | `300000` (5 min) |
 
-## Noise Filtering (v1.1.0+)
+## Noise Filtering
 
 The plugin automatically suppresses notifications from:
 
 - **Subagents** — sessions with titles like `(@explore subagent)`, `(@oracle subagent)` etc.
 - **Unnamed background sessions** — sessions where the title is just a raw session ID (`ses_xxxx`)
 - **Generic errors** — `The operation was aborted.` and `Model not found:` errors are silently dropped
-- **Todo completions** from subagent/background sessions are also suppressed (v1.1.4+)
-- **Subtask notifications** from subagent sessions or with subagent-style agent names are also suppressed (v1.1.4+)
+- **Todo completions** from subagent/background sessions are also suppressed
+- **Subtask notifications** from subagent sessions or with subagent-style agent names are also suppressed
 
 This keeps your Telegram clean when using multi-agent workflows like **Oh My OpenCode**.
 
-## Idle Notification Debounce (v1.1.2+)
+## Idle Notification Debounce
 
 Idle notifications are delayed **15 seconds** before being sent. If the session goes busy again within that window (e.g. due to `system-reminder` injections), the notification is cancelled.
 
 This prevents rapid idle→busy→idle cycles from spamming your Telegram.
 
-## Smart Wait Detection (v1.1.0+)
+## Smart Wait Detection
 
 When a session goes idle, the plugin checks if there are unfinished todos:
 
@@ -144,6 +147,25 @@ export OPENCODE_TELEGRAM_DEDUP_TTL_MS="600000"   # 10 minutes
 | Permission needed | 🔔 Permission Request (with buttons) |
 | All todos done | 📋 All Tasks Complete |
 | Error occurred | ❌ Error (real errors only) |
+
+## Companion Plugins
+
+`opencode-telegram-bot-plugin` handles notifications and remote control. Use task-resolution plugins alongside it for a complete setup.
+
+Recommended companion:
+
+- [`opencode-resolve`](https://github.com/jshsakura/opencode-resolve): Lightweight agent injection with native `plan`/`build` preservation for OpenCode sessions.
+
+Example:
+
+```json
+{
+  "plugin": [
+    "opencode-resolve",
+    "opencode-telegram-bot-plugin"
+  ]
+}
+```
 
 ## License
 

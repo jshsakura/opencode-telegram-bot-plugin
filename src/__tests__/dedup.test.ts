@@ -127,6 +127,32 @@ describe('dedup', () => {
     });
   });
 
+  describe('concurrent instances', () => {
+    it('exactly one caller wins when many instances race on the same message', async () => {
+      // Simulates 5 opencode processes all calling checkAndStore for the
+      // same idle notification at once.
+      const results = await Promise.all(
+        Array.from({ length: 5 }, () => checkAndStore('race message'))
+      );
+
+      expect(results.filter(Boolean).length).toBe(1);
+
+      const data = JSON.parse(fs.readFileSync(STORAGE_PATH, 'utf-8'));
+      expect(Object.keys(data).length).toBe(1);
+    });
+
+    it('storage file stays valid JSON under concurrent writes of different messages', async () => {
+      const results = await Promise.all(
+        Array.from({ length: 10 }, (_, i) => checkAndStore(`message ${i}`))
+      );
+
+      expect(results.every(Boolean)).toBe(true);
+
+      const data = JSON.parse(fs.readFileSync(STORAGE_PATH, 'utf-8'));
+      expect(Object.keys(data).length).toBe(10);
+    });
+  });
+
   describe('clear', () => {
     it('should remove storage file', async () => {
       await checkAndStore('test message');

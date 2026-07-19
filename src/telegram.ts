@@ -6,6 +6,7 @@ import type { TelegramConfig, PermissionCallbackHandler, InlineKeyboardButton, T
 import { t } from './i18n/index.js';
 import { getConfig } from './config.js';
 import { checkAndStore } from './dedup.js';
+import { isProcessRunning } from './process-utils.js';
 
 const LOCK_PATH = path.join(os.tmpdir(), 'opencode-telegram-bot.lock');
 const MAX_BACKOFF_MS = 60_000;
@@ -576,11 +577,3 @@ function sleep(ms: number): Promise<void> {
   return new Promise((r) => setTimeout(r, ms));
 }
 
-function isProcessRunning(pid: number): boolean {
-  try {
-    process.kill(pid, 0);
-    return true;
-  } catch {
-    return false;
-  }
-}
